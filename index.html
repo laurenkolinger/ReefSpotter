@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>USVI Reef Screen · VICAR Lab</title>
+<meta name="description" content="An AI-assisted coral reef screening tool from the VICAR Lab, U.S. Virgin Islands." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<style>
+
+  :root{
+    --ink:#06273A; --ink-2:#3C566B; --mut:#7A899E;
+    --canvas:#F2F6F8; --panel:#FFFFFF; --panel-2:#EFF4F6;
+    --line:#E9EEF2; --line-2:rgba(6,39,58,.055);
+    --navy:#06273A; --navy-2:#0C3A53;
+    --magenta:#E60A80; --magenta-deep:#B8005F; --magenta-soft:#FF4FA6;
+    --magenta-wash:rgba(230,10,128,.06);
+    --steel:#8B97AD; --slate:#8B97AD; --mist:#E8EEF1; --blue:#2E3FD6; --mint:#93E68A;
+    --green:#10B981; --amber:#F59E0B;
+    --rule:#E9EEF2; --rule-d:rgba(255,255,255,.12);
+    --bone:#F2F6F8; --bone-2:#E6EDF1; --abyss:#06273A;
+    --radius:18px; --radius-sm:12px; --radius-xs:10px;
+    --shadow:0 1px 2px rgba(6,39,58,.03), 0 18px 42px -24px rgba(6,39,58,.18);
+    --shadow-sm:0 1px 1px rgba(6,39,58,.04);
+    --display:"Space Grotesk","Plus Jakarta Sans",system-ui,sans-serif;
+    --ui:"Plus Jakarta Sans",system-ui,-apple-system,sans-serif;
+    --accent:"Plus Jakarta Sans",system-ui,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    --page:linear-gradient(165deg,#EAF2FB 0%,#DCE8F6 50%,#CEDFF2 100%);
+    --card:linear-gradient(180deg, rgba(255,255,255,.84), rgba(234,243,252,.78));
+    --card-hover:linear-gradient(180deg, rgba(255,255,255,.95), rgba(226,238,251,.88));
+    --ico:linear-gradient(155deg,#E1ECFA,#F5FAFF);
+    --feature:linear-gradient(150deg,#0C3A53 0%,#06273A 52%,#0A1F46 100%);
+    --header:rgba(233,241,251,.62);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--page);background-attachment:fixed;color:var(--ink);font-family:var(--ui);line-height:1.5;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;display:flex;flex-direction:column;overflow:hidden}
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(1100px 540px at 50% -14%, rgba(46,63,214,.16), transparent 60%), radial-gradient(760px 520px at 98% 2%, rgba(230,10,128,.10), transparent 56%), radial-gradient(900px 620px at -8% 112%, rgba(46,63,214,.12), transparent 60%)}
+  .demobar,header.site,main,footer.site,.loader{position:relative;z-index:1}
+  .bubbles{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+  .bubble{position:absolute;bottom:-18vh;border-radius:50%;opacity:0;will-change:transform,opacity;animation:rise var(--d,44s) ease-in infinite;animation-delay:var(--delay,0s)}
+  @keyframes rise{0%{transform:translateY(0) scale(.55);opacity:0}14%{opacity:.5}55%{opacity:.3}100%{transform:translateY(-126vh) scale(1.1);opacity:0}}
+  @media (prefers-reduced-motion:reduce){.bubbles{display:none}}
+  img{max-width:100%;display:block}
+  .acc{font-family:var(--display);font-style:normal;color:var(--magenta)}
+  .mono{font-family:var(--mono)}
+  .kicker{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.13em;color:var(--magenta);font-weight:500}
+  .wrap{width:100%;max-width:1340px;margin:0 auto;padding:0 clamp(14px,3vw,40px)}
+  a{color:var(--magenta)}
+
+  .demobar{flex:none;background:var(--feature);color:#fff}
+  .demobar .wrap{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;padding:6px 14px}
+  .demobar .dot{width:6px;height:6px;background:var(--magenta-soft);border-radius:50%;box-shadow:0 0 0 3px rgba(226,0,116,.25);animation:pulse 2.4s infinite;flex:none}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .demobar b{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+  .demobar span{font-family:var(--mono);font-size:10px;letter-spacing:.02em;color:rgba(255,255,255,.55)}
+
+  header.site{flex:none;background:var(--header);backdrop-filter:saturate(140%) blur(10px);border-bottom:1px solid var(--line);z-index:20}
+  header.site .wrap{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px clamp(14px,3vw,40px)}
+  .brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit}
+  .logomark{flex:none;width:clamp(38px,5vw,44px);height:clamp(38px,5vw,44px);display:block}
+  .logomark svg{width:100%;height:100%;display:block}
+  .brandtext{display:flex;flex-direction:column;line-height:1;gap:3px}
+  .bname{font-family:var(--display);font-weight:600;font-size:clamp(17px,2.3vw,21px);letter-spacing:-.02em;color:var(--ink);white-space:nowrap}
+  .bname span{color:var(--magenta)}
+  .btag{font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--mut)}
+  @media(max-width:600px){.btag{display:none}.bname{font-size:16px}}
+  .prog{display:flex;align-items:center;gap:8px}
+  .prog .p{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);font-weight:500}
+  .prog .p .n{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:9.5px;transition:.2s}
+  .prog .p.on{color:var(--magenta)} .prog .p.on .n{border-color:var(--magenta);background:var(--magenta);color:#fff;box-shadow:0 4px 12px -3px rgba(226,0,116,.5)}
+  .prog .p.done{color:var(--ink-2)} .prog .p.done .n{border-color:var(--magenta);color:var(--magenta)}
+  .prog .sep{width:16px;height:1.5px;background:var(--line);border-radius:2px}
+  @media(max-width:720px){.prog .lab{display:none}}
+
+  main{flex:1;min-height:0;display:flex}
+  main .wrap{flex:1;display:flex;min-height:0;padding-top:clamp(14px,2.4vh,26px);padding-bottom:clamp(14px,2.4vh,26px)}
+  .step{display:none;flex:1;min-height:0;flex-direction:column}
+  .step.active{display:flex;animation:stepin .34s cubic-bezier(.2,.7,.2,1)}
+  @keyframes stepin{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .step .h .kicker{margin-bottom:9px}
+  .step h1{font-family:var(--display);font-weight:600;letter-spacing:-.03em;line-height:1.04;font-size:clamp(27px,3.6vw,44px);color:var(--ink)}
+  .step h1.learnh1{font-size:clamp(22px,2.6vw,30px)}
+  .step h2{font-family:var(--display);font-weight:600;font-size:clamp(19px,2.4vw,25px);letter-spacing:-.02em}
+  .step .sub{font-size:14.5px;color:var(--ink-2);margin-top:10px;max-width:62ch}
+  .body{flex:1;min-height:0;margin-top:clamp(16px,2.6vh,26px);display:flex;flex-direction:column}
+  .nav{flex:none;display:flex;align-items:center;gap:14px;margin-top:clamp(14px,2vh,20px)}
+  .spacer{flex:1}
+
+  .btn{font-family:var(--ui);font-size:13px;font-weight:600;letter-spacing:.01em;background:var(--magenta);color:#fff;border:1px solid var(--magenta);border-radius:999px;padding:11px 22px;cursor:pointer;transition:.16s;box-shadow:0 10px 22px -12px rgba(230,10,128,.55)}
+  .btn:hover{background:var(--magenta-deep);border-color:var(--magenta-deep);transform:translateY(-1px)}
+  .btn[disabled]{background:var(--panel-2);color:var(--mut);border-color:var(--line);cursor:not-allowed;box-shadow:none;transform:none}
+  .btn.ghost{background:var(--card);color:var(--ink);border-color:var(--line);box-shadow:var(--shadow-sm)}
+  .btn.ghost:hover{border-color:var(--magenta);color:var(--magenta);background:var(--card)}
+  .hinttext{font-family:var(--mono);font-size:10.5px;letter-spacing:.02em;color:var(--mut)}
+
+  /* WELCOME */
+  .welcome{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;max-width:780px}
+  .welcome h1{font-size:clamp(36px,6vw,64px);margin-top:12px;letter-spacing:-.035em}
+  .wlede{font-size:clamp(16px,2.2vw,21px);color:var(--ink-2);margin-top:18px;max-width:42ch;min-height:2.4em}
+  .wlede.typing::after{content:"\258C";color:var(--magenta);margin-left:1px;animation:blink .7s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+  .counter{margin-top:26px;font-family:var(--mono);font-size:12px;letter-spacing:.02em;color:var(--mut)}
+  .counter b{color:var(--magenta);font-size:15px;font-weight:700}
+  .wbtns,.counter{transition:opacity .4s ease, transform .5s cubic-bezier(.2,.85,.25,1.18)}
+  .welcome.typing-mode .wbtns,.welcome.typing-mode .counter{opacity:0;transform:translateY(16px);pointer-events:none}
+  .welcome .counter{transition-delay:.08s}
+  .wbtns{display:flex;gap:14px;margin-top:32px;flex-wrap:wrap}
+  .bigbtn{flex:1;min-width:240px;text-align:left;background:var(--magenta);color:#fff;border:1px solid var(--magenta);border-radius:var(--radius);padding:22px 24px;cursor:pointer;transition:.2s cubic-bezier(.2,.7,.2,1);box-shadow:0 16px 34px -18px rgba(230,10,128,.6)}
+  .bigbtn:hover{background:var(--magenta-deep);transform:translateY(-2px);box-shadow:0 22px 44px -20px rgba(230,10,128,.7)}
+  .bigbtn b{font-family:var(--display);font-weight:600;font-size:19px;display:block;letter-spacing:-.01em}
+  .bigbtn span{font-family:var(--mono);font-size:10.5px;letter-spacing:.03em;opacity:.85;display:block;margin-top:5px}
+  .bigbtn.ghost{background:var(--card);color:var(--ink);border-color:var(--line);box-shadow:var(--shadow)}
+  .bigbtn.ghost:hover{border-color:var(--magenta);background:var(--card);transform:translateY(-3px)}
+
+  /* STEP 1 options */
+  .opts{flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-content:center}
+  @media(max-width:820px){.opts{grid-template-columns:1fr}}
+  .opt{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:var(--radius);padding:24px;cursor:pointer;transition:.18s cubic-bezier(.2,.7,.2,1);text-align:left;display:flex;flex-direction:column;gap:6px;box-shadow:var(--shadow-sm)}
+  .opt:hover{border-color:var(--magenta);background:var(--card-hover);transform:translateY(-2px);box-shadow:var(--shadow)}
+  .opt.sel{border-color:var(--magenta);box-shadow:0 0 0 1px var(--magenta), var(--shadow);background:var(--magenta-wash)}
+  .opt .n{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--magenta);font-weight:500}
+  .opt h3{font-family:var(--display);font-size:21px;font-weight:600;letter-spacing:-.015em}
+  .opt p{font-size:13.5px;color:var(--ink-2)}
+  .opt .ico{width:46px;height:46px;display:flex;align-items:center;justify-content:center;color:var(--magenta);background:var(--ico);border:1px solid rgba(46,63,214,.12);border-radius:13px;margin-bottom:8px;transition:.2s cubic-bezier(.2,.7,.2,1)}
+  .opt .ico svg{width:27px;height:27px}
+  .opt:hover .ico{background:var(--magenta);color:#fff;transform:rotate(-4deg) scale(1.05)}
+  .opt.sel .ico{background:var(--magenta);color:#fff}
+  .opt.elsecard{justify-content:flex-start}
+  .opt.elsecard select{margin-top:6px;width:100%;font-family:var(--mono);font-size:13px;color:var(--ink);background:var(--panel-2);border:1px solid var(--line);border-radius:var(--radius-xs);padding:11px 12px;cursor:pointer;outline:none;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23E20074' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 12px center}
+  .opt.elsecard select:focus{border-color:var(--magenta)}
+
+  /* PHOTO */
+  .two{flex:1;min-height:0;display:grid;grid-template-columns:1.25fr .75fr;gap:20px}
+  @media(max-width:820px){.two{grid-template-columns:1fr}}
+  .imgcol{display:flex;flex-direction:column;min-height:0}
+  .frame{flex:1;min-height:160px;border:1px solid var(--line);border-radius:var(--radius);background:var(--feature);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;box-shadow:var(--shadow-sm)}
+  .frame img{max-width:100%;max-height:100%;object-fit:contain}
+  .drop{flex:1;border:1.5px dashed var(--line);border-radius:var(--radius);background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;cursor:pointer;transition:.18s;padding:18px;box-shadow:var(--shadow-sm)}
+  .drop:hover,.drop:focus-within,.drop.drag{border-color:var(--magenta);background:var(--magenta-wash)}
+  .drop svg{width:36px;height:36px;color:var(--steel);margin-bottom:10px}
+  .drop .big{font-family:var(--display);font-size:16px;font-weight:600;letter-spacing:-.01em}
+  .drop .small{font-family:var(--mono);font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--mut);margin-top:6px}
+  .drop input{position:absolute;width:1px;height:1px;opacity:0}
+  .bboxlayer{position:absolute;cursor:crosshair;touch-action:none}
+  .bboxrect{position:absolute;border:2px solid var(--magenta);background:rgba(226,0,116,.14);box-shadow:0 0 0 9999px rgba(5,11,20,.5);display:none;pointer-events:none}
+  .bboxhint{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(5,11,20,.8);border:1px solid var(--magenta);border-radius:var(--radius-sm);color:#fff;font-family:var(--mono);font-size:12px;letter-spacing:.02em;padding:12px 16px;text-align:center;pointer-events:none;display:none;max-width:86%}
+  .bboxhint.show{display:block}
+  .bboxhint svg{width:22px;height:22px;margin:0 auto 7px;display:block;color:var(--magenta-soft)}
+  .bboxhint b{color:#fff;font-weight:700}.bboxhint .o{display:block;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-top:4px}
+  .reupload{margin-top:9px;align-self:flex-start;font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--magenta);background:var(--card);border:1px solid var(--line);border-radius:var(--radius-xs);padding:8px 13px;cursor:pointer;transition:.15s}
+  .reupload:hover{border-color:var(--magenta);background:var(--magenta-wash)}
+  .helpcard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px;display:flex;flex-direction:column;box-shadow:var(--shadow-sm)}
+  .helpcard .kicker{margin-bottom:12px}
+  .boxinstr{border:1px solid var(--magenta);background:var(--magenta-wash);border-radius:var(--radius-sm);padding:14px;display:flex;gap:11px;align-items:flex-start}
+  .boxinstr>svg{width:24px;height:24px;color:var(--magenta);flex:none}
+  .boxinstr b{font-family:var(--display);font-size:14.5px;font-weight:600}
+  .boxinstr span{display:block;font-size:12.5px;color:var(--ink-2);margin-top:3px;line-height:1.5}
+  .boxinstr.done{border-color:var(--green);background:rgba(16,185,129,.08)} .boxinstr.done>svg{color:var(--green)}
+  .clearbtn{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--magenta);background:none;border:none;cursor:pointer;padding:6px 0 0}
+  .tips{margin-top:auto;padding-top:16px;border-top:1px solid var(--line);display:grid;gap:6px}
+  .tips .lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+  .tips .t{font-size:12.5px;color:var(--ink-2);padding-left:16px;position:relative}
+  .tips .t::before{content:"›";position:absolute;left:2px;color:var(--magenta)}
+
+  /* DETAILS */
+  .det{flex:1;min-height:0;display:grid;grid-template-columns:1.1fr .9fr;gap:20px}
+  @media(max-width:820px){.det{grid-template-columns:1fr}}
+  .mapcol{display:flex;flex-direction:column;min-height:200px}
+  #map{flex:1;min-height:200px;border:1px solid var(--line);border-radius:var(--radius);background:#0c1a26;overflow:hidden}
+  .maperr{display:none;align-items:center;justify-content:center;text-align:center;color:var(--mut);font-family:var(--mono);font-size:11px;padding:16px;flex:1;border:1px solid var(--line);border-radius:var(--radius)}
+  .form{display:flex;flex-direction:column;overflow:auto}
+  .fld{margin-bottom:12px}
+  .fld label{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);display:block;margin-bottom:5px}
+  .fld label .req{color:var(--magenta)}
+  .fld input,.fld textarea{width:100%;background:var(--card);border:1px solid var(--line);border-radius:var(--radius-xs);color:var(--ink);font-family:var(--ui);font-size:13.5px;padding:10px 12px;outline:none;resize:vertical;transition:.15s}
+  .fld input:focus,.fld textarea:focus{border-color:var(--magenta);box-shadow:0 0 0 3px rgba(226,0,116,.12)}
+  .fld input::placeholder,.fld textarea::placeholder{color:var(--mut)}
+  .fld .help{font-size:11.5px;color:var(--mut);margin-top:5px;font-style:italic;font-family:var(--accent)}
+  .fld.bad input,.fld.bad textarea{border-color:var(--magenta);background:var(--magenta-wash)}
+
+  /* RESULTS */
+  .results{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:13px}
+  .runline{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--mut)}
+  .runline b{color:var(--magenta)}
+  .tripnote{border-left:4px solid var(--amber);background:rgba(245,158,11,.1);border-radius:var(--radius-xs);padding:12px 15px;font-size:12.5px;color:var(--ink)}
+  .tripnote b{color:#9a6a14}
+  .headline{background:var(--feature);color:#fff;border:1px solid var(--navy-2);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow)}
+  .headline .kicker{color:var(--magenta-soft);margin-bottom:8px}
+  .headline h3{font-family:var(--display);font-weight:600;font-size:clamp(22px,3vw,31px);letter-spacing:-.02em}
+  .headline .hsub{font-size:13px;color:rgba(255,255,255,.7);margin-top:8px;max-width:66ch}
+  .lowconf{font-family:var(--mono);font-size:10.5px;letter-spacing:.02em;color:var(--mut);padding:3px 2px}
+  .modellink{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--magenta-soft);background:none;border:none;cursor:pointer;padding:0}
+  .modellink:hover{color:#fff;text-decoration:underline}
+  .modintro{font-size:13px;color:var(--ink-2);max-width:76ch;margin-bottom:14px;font-style:italic;font-family:var(--accent)}
+  .models{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:10px}
+  @media(max-width:720px){.models{grid-template-columns:1fr}}
+  .mcard{border:1px solid var(--line);background:var(--card);border-radius:var(--radius);padding:17px 19px;box-shadow:var(--shadow-sm)}
+  .mcard h3{font-family:var(--display);font-size:16px;font-weight:600;margin-bottom:8px;letter-spacing:-.01em}
+  .mrow{display:flex;justify-content:space-between;gap:14px;font-size:12px;padding:6px 0;border-top:1px solid var(--line)}
+  .mrow span{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);flex:none;padding-top:1px}
+  .mrow b{font-weight:500;text-align:right;color:var(--ink)}
+  .mcard.flash{outline:2px solid var(--magenta);outline-offset:3px}
+  .mlinks{display:flex;flex-wrap:wrap;gap:12px;margin-top:11px;padding-top:10px;border-top:1px solid var(--line)}
+  .mlinks a{font-family:var(--mono);font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--magenta);text-decoration:none}
+  .mlinks a:hover{text-decoration:underline}
+  .toc{display:flex;flex-wrap:wrap;align-items:center;gap:12px;border:1px solid var(--line);background:var(--card);border-radius:var(--radius);padding:11px 15px;margin-bottom:16px;box-shadow:var(--shadow-sm)}
+  .toc .toclbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut)}
+  .toc button{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--magenta);background:none;border:none;cursor:pointer;padding:0}
+  .toc button:hover{text-decoration:underline}
+  .gallhead{scroll-margin-top:8px}
+  .support{font-size:13px;color:var(--ink-2);margin-top:8px}
+  .privacy-note{font-size:12.5px;color:var(--ink-2);background:var(--panel-2);border-left:3px solid var(--steel);border-radius:0 var(--radius-xs) var(--radius-xs) 0;padding:11px 14px;margin:8px 0 6px;max-width:80ch}
+  .inlinelink{font-family:var(--mono);font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--magenta);background:none;border:none;cursor:pointer;padding:0}
+  .inlinelink:hover{text-decoration:underline}
+  .idfilter{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+  .idfilter button{font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 13px;cursor:pointer;transition:.15s}
+  .idfilter button:hover{border-color:var(--magenta);color:var(--magenta)}
+  .idfilter button.on{background:var(--magenta);color:#fff;border-color:var(--magenta)}
+  #map2{height:280px;border:1px solid var(--line);border-radius:var(--radius);background:#0c1a26;margin-bottom:12px;overflow:hidden}
+  .idtablewrap{border:1px solid var(--line);border-radius:var(--radius);overflow:auto;max-height:360px}
+  table.idtable{width:100%;border-collapse:collapse;font-size:12.5px;background:var(--card)}
+  table.idtable th{position:sticky;top:0;font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--panel-2)}
+  table.idtable td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  table.idtable tr:last-child td{border-bottom:none}
+  table.idtable em{font-family:var(--accent);font-style:italic;color:var(--magenta-deep)}
+  .gallery2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:600px){.gallery2{grid-template-columns:1fr}}
+  .gallery2 .gcard img{height:230px}
+  .gcard figcaption a{color:var(--magenta)}
+  .tos label.tosrow{display:flex;gap:9px;align-items:flex-start;cursor:pointer}
+  .tos input{margin-top:2px;width:15px;height:15px;accent-color:var(--magenta);flex:none}
+  .tos .tosrow span{font-size:12px;color:var(--ink-2);line-height:1.5}
+  .tos a{color:var(--magenta)}
+  .fld.tos.bad{background:var(--magenta-wash);outline:1px solid var(--magenta);border-radius:var(--radius-xs);padding:6px}
+  .rcard{background:var(--feature);color:#fff;border:1px solid var(--navy-2);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow)}
+  .rcard .rh{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:14px}
+  .rcard .rh h3{font-family:var(--display);font-size:17px;font-weight:600;letter-spacing:-.01em}
+  .rcard .rh .st{font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.42)}
+  .classes{display:grid;gap:8px}
+  .cls{border:1px solid var(--rule-d);border-radius:var(--radius-xs);padding:10px 13px}
+  .cls .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .cls .name{font-size:14.5px;font-weight:500}
+  .cls .name i{font-family:var(--mono);font-style:normal;font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.5);display:block;margin-top:2px}
+  .cls .name em{font-family:var(--accent);font-style:italic;color:#fff;font-size:15px}
+  .cls .pct{font-family:var(--mono);font-size:13px;font-weight:500;color:#fff}
+  .cls .track{height:6px;border-radius:3px;background:rgba(255,255,255,.1);margin-top:8px;overflow:hidden}
+  .cls .fill{height:100%;width:0;border-radius:3px;background:var(--steel);transition:width .9s cubic-bezier(.2,.7,.2,1)}
+  .cls.lead{border-color:var(--magenta)}.cls.lead .fill{background:var(--magenta)}.cls.lead .pct{color:var(--magenta-soft)}
+  .verdict{display:flex;align-items:center;gap:18px}
+  .verdict .yn{font-family:var(--display);font-weight:700;font-size:46px;line-height:.9;letter-spacing:-.03em}
+  .verdict.no .yn{color:var(--green)}.verdict.yes .yn{color:var(--magenta-soft)}
+  .verdict .q{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.55)}
+  .verdict .d{font-size:14.5px;margin-top:4px}.verdict .d em{font-family:var(--accent);font-style:italic;color:var(--magenta-soft)}
+  .verdict .c{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.6);margin-top:5px}
+  .src{font-family:var(--mono);font-size:9px;letter-spacing:.05em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-top:12px}
+
+  /* LEARN / gallery */
+  .learnbody{overflow:auto}
+  .about{max-width:74ch}
+  .about p{font-size:14.5px;color:var(--ink-2);margin-bottom:11px}
+  .goals{list-style:none;display:grid;gap:7px;margin:6px 0 4px}
+  .goals li{font-size:14px;color:var(--ink-2);padding-left:18px;position:relative}
+  .goals li::before{content:"›";position:absolute;left:2px;color:var(--magenta)}
+  .gallhead{margin:24px 0 14px;font-family:var(--display)}
+  .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding-bottom:6px}
+  @media(max-width:820px){.gallery{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:520px){.gallery{grid-template-columns:1fr}}
+  .gcard{border:1px solid var(--line);background:var(--card);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm)}
+  .gcard img{width:100%;height:150px;object-fit:cover}
+  .gcard figcaption{padding:12px 14px}
+  .gcard .chip{display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:.02em;color:#fff;background:var(--magenta);border-radius:999px;padding:4px 10px}
+  .gcard .chip.g{background:var(--green);color:#06210f}
+  .gcard .chip.b{background:var(--steel)}
+  .gcard .meta{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--mut);margin-top:8px}
+
+  /* loader */
+  .loader{position:fixed;inset:0;z-index:3000;background:rgba(11,27,43,.94);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:24px}
+  .loader.show{display:flex;animation:stepin .25s ease}
+  .loadbox{width:min(460px,90vw)}
+  .loadbox .kicker{color:var(--magenta-soft);margin-bottom:14px}
+  .loadstage{font-family:var(--display);font-weight:600;font-size:clamp(21px,3vw,30px);color:#fff;min-height:1.3em;letter-spacing:-.02em}
+  .loadtrack{height:8px;border-radius:4px;background:rgba(255,255,255,.12);margin-top:18px;overflow:hidden}
+  .loadfill{height:100%;width:0;border-radius:4px;background:var(--magenta);box-shadow:0 0 16px rgba(226,0,116,.65);transition:width .2s linear}
+  .loadpct{margin-top:10px;font-size:12px;color:rgba(255,255,255,.6);letter-spacing:.1em}
+
+  /* footer disclaimer */
+  footer.site{flex:none;background:var(--feature);color:#fff}
+  footer.site .wrap{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:11px clamp(14px,3vw,40px)}
+  footer.site .disc{display:flex;align-items:center;gap:11px;font-family:var(--mono);font-size:10px;letter-spacing:.01em;color:rgba(255,255,255,.62);max-width:96ch;line-height:1.55}
+  footer.site .disc img{height:22px;width:auto;opacity:.9;flex:none;filter:brightness(0) invert(1)}
+  footer.site .disc a{color:var(--magenta-soft);text-decoration:underline}
+  footer.site .cred{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45);text-align:right}
+  footer.site .cred b{color:rgba(255,255,255,.72)}
+
+  @media (max-width:820px), (max-height:620px){
+    body{overflow:auto}
+    .two,.det{grid-template-columns:1fr}
+    .frame{min-height:240px}
+    #map,.maperr,.mapcol{min-height:240px}
+  }
+
+
+  :root[data-theme="dark"]{
+    --ink:#EAF2FB; --ink-2:#AEC1D3; --mut:#7E94A8;
+    --line:rgba(255,255,255,.12); --line-2:rgba(255,255,255,.06);
+    --panel-2:rgba(255,255,255,.06); --rule:rgba(255,255,255,.12); --rule-d:rgba(255,255,255,.14);
+    --magenta-wash:rgba(255,79,166,.10);
+    --page:linear-gradient(165deg,#061829 0%,#0A2238 46%,#0A1A3C 100%);
+    --card:linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.032));
+    --card-hover:linear-gradient(180deg, rgba(255,255,255,.13), rgba(255,255,255,.055));
+    --ico:linear-gradient(155deg, rgba(46,63,214,.36), rgba(255,255,255,.05));
+    --feature:linear-gradient(150deg, rgba(46,63,214,.26), rgba(8,28,50,.6));
+    --header:rgba(7,20,36,.5);
+  }
+  .opt,.helpcard,.mcard,.toc,.gcard,.drop,.btn.ghost,.idfilter button{backdrop-filter:blur(9px) saturate(135%);-webkit-backdrop-filter:blur(9px) saturate(135%)}
+  .brand{margin-right:auto}
+  .btag{letter-spacing:.06em}
+  .themetoggle{flex:none;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.18s;backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
+  .themetoggle:hover{border-color:var(--magenta);color:var(--magenta);transform:translateY(-1px)}
+  .themetoggle svg{width:18px;height:18px}
+  .themetoggle .sun{display:none}
+  :root[data-theme="dark"] .themetoggle .sun{display:block}
+  :root[data-theme="dark"] .themetoggle .moon{display:none}
+  :root[data-theme="dark"] .logomark [fill="#06273A"]{fill:#EAF2FB}
+  :root[data-theme="dark"] .logomark [stroke="#06273A"]{stroke:#EAF2FB}
+  :root[data-theme="dark"] .logomark svg{filter:drop-shadow(0 1px 3px rgba(0,0,0,.35))}
+  #rotator{transition:opacity 1.2s ease-in-out}
+</style>
+<script>(function(){try{var t=localStorage.getItem("reefspotter-theme");if(t!=="light")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();</script>
+</head>
+<body>
+
+<div class="bubbles" aria-hidden="true">
+  <span class="bubble" style="left:5%;width:130px;height:130px;background:rgba(230,10,128,.13);filter:blur(6px);--d:53s;--delay:-9.7s"></span>
+  <span class="bubble" style="left:14%;width:60px;height:60px;background:transparent;border:2px solid rgba(46,63,214,.20);filter:blur(5px);--d:38s;--delay:-21.1s"></span>
+  <span class="bubble" style="left:22%;width:90px;height:90px;background:rgba(139,151,173,.17);filter:blur(6px);--d:46s;--delay:-23.7s"></span>
+  <span class="bubble" style="left:33%;width:42px;height:42px;background:rgba(147,230,138,.20);filter:blur(5px);--d:34s;--delay:-32.8s"></span>
+  <span class="bubble" style="left:42%;width:160px;height:160px;background:rgba(230,10,128,.13);filter:blur(7px);--d:63s;--delay:-36.8s"></span>
+  <span class="bubble" style="left:52%;width:70px;height:70px;background:transparent;border:2px solid rgba(46,63,214,.20);filter:blur(5px);--d:42s;--delay:-38.6s"></span>
+  <span class="bubble" style="left:61%;width:50px;height:50px;background:rgba(139,151,173,.17);filter:blur(5px);--d:36s;--delay:-29.1s"></span>
+  <span class="bubble" style="left:70%;width:112px;height:112px;background:rgba(147,230,138,.20);filter:blur(6px);--d:51s;--delay:-27.3s"></span>
+  <span class="bubble" style="left:78%;width:80px;height:80px;background:rgba(230,10,128,.13);filter:blur(6px);--d:44s;--delay:-21.1s"></span>
+  <span class="bubble" style="left:88%;width:140px;height:140px;background:rgba(139,151,173,.17);filter:blur(7px);--d:59s;--delay:-7.6s"></span>
+  <span class="bubble" style="left:95%;width:55px;height:55px;background:transparent;border:2px solid rgba(46,63,214,.20);filter:blur(5px);--d:40s;--delay:-13.2s"></span>
+  <span class="bubble" style="left:30%;width:100px;height:100px;background:transparent;border:1.5px solid rgba(255,255,255,.10);filter:blur(6px);--d:49s;--delay:-0.9s"></span>
+  <span class="bubble" style="left:64%;width:36px;height:36px;background:rgba(230,10,128,.13);filter:blur(5px);--d:32s;--delay:-10.5s"></span>
+  <span class="bubble" style="left:48%;width:46px;height:46px;background:rgba(147,230,138,.20);filter:blur(5px);--d:38s;--delay:-11.2s"></span>
+  <span class="bubble" style="left:10%;width:96px;height:96px;background:transparent;border:2px solid rgba(46,63,214,.20);filter:blur(6px);--d:55s;--delay:-20.7s"></span>
+  <span class="bubble" style="left:84%;width:66px;height:66px;background:rgba(139,151,173,.17);filter:blur(5px);--d:42s;--delay:-39.9s"></span>
+</div>
+
+<div class="demobar" role="alert">
+  <div class="wrap"><span class="dot" aria-hidden="true"></span><b>Demonstration only</b><span>Proof of concept for a proposal &middot; no production AI model is connected &middot; read-outs are illustrative</span></div>
+</div>
+
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="#" id="homebrand" aria-label="ReefSpotter by VICAR"><span class="logomark" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="28" cy="27" r="11" fill="#E60A80" fill-opacity="0.10"/>
+<line x1="40" y1="39" x2="53.5" y2="52.5" stroke="#06273A" stroke-width="8.4" stroke-linecap="round"/>
+<line x1="40" y1="39" x2="53.5" y2="52.5" stroke="#2E3FD6" stroke-width="8.4" stroke-linecap="round" stroke-opacity="0.18"/>
+<path d="M28 10.4 L29.49 10.47 L30.82 6.19 L34.49 7.03 L33.83 11.46 L35.2 12.04 L36.51 12.75 L39.57 9.47 L42.51 11.82 L40 15.53 L40.98 16.65 L41.85 17.86 L46.03 16.23 L47.66 19.62 L43.79 21.87 L44.18 23.31 L44.45 24.77 L48.92 25.12 L48.92 28.88 L44.45 29.23 L44.18 30.69 L43.79 32.13 L47.66 34.38 L46.03 37.77 L41.85 36.14 L40.98 37.35 L40 38.47 L42.51 42.18 L39.57 44.53 L36.51 41.25 L35.2 41.96 L33.83 42.54 L34.49 46.97 L30.82 47.81 L29.49 43.53 L28 43.6 L26.51 43.53 L25.18 47.81 L21.51 46.97 L22.17 42.54 L20.8 41.96 L19.49 41.25 L16.43 44.53 L13.49 42.18 L16 38.47 L15.02 37.35 L14.15 36.14 L9.97 37.77 L8.34 34.38 L12.21 32.13 L11.82 30.69 L11.55 29.23 L7.08 28.88 L7.08 25.12 L11.55 24.77 L11.82 23.31 L12.21 21.87 L8.34 19.62 L9.97 16.23 L14.15 17.86 L15.02 16.65 L16 15.53 L13.49 11.82 L16.43 9.47 L19.49 12.75 L20.8 12.04 L22.17 11.46 L21.51 7.03 L25.18 6.19 L26.51 10.47 Z M 16.6 27 a 11.4 11.4 0 1 0 22.8 0 a 11.4 11.4 0 1 0 -22.8 0 Z" fill="#06273A" fill-rule="evenodd" stroke="#2E3FD6" stroke-opacity="0.32" stroke-width="0.8"/>
+<circle cx="28" cy="27" r="11.4" fill="none" stroke="#06273A" stroke-width="0.6"/>
+<path d="M 28 18.8 Q 30.5 24.5 36.2 27 Q 30.5 29.5 28 35.2 Q 25.5 29.5 19.8 27 Q 25.5 24.5 28 18.8 Z" fill="#E60A80"/>
+<circle cx="23" cy="21.5" r="1.7" fill="#ffffff" fill-opacity="0.6"/>
+</svg></span><span class="brandtext"><span class="bname">Reef<span>Spotter</span></span><span class="btag">by VICAR</span></span></a>
+    <div class="prog" id="prog" style="visibility:hidden">
+      <span class="p" data-s="1"><span class="n">1</span><span class="lab">Identify</span></span><span class="sep"></span>
+      <span class="p" data-s="2"><span class="n">2</span><span class="lab">Photo</span></span><span class="sep"></span>
+      <span class="p" data-s="3"><span class="n">3</span><span class="lab">Details</span></span><span class="sep"></span>
+      <span class="p" data-s="4"><span class="n">4</span><span class="lab">Results</span></span>
+    </div>
+    <button class="themetoggle" id="themeToggle" aria-label="Toggle dark and light mode" type="button"><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg></button>
+  </div>
+</header>
+
+<main><div class="wrap">
+
+  <!-- WELCOME -->
+  <section class="step active" id="step-welcome">
+    <div class="welcome">
+      <h1>Welcome, <span class="acc" id="rotator">Friend</span></h1>
+      <p class="wlede" id="wlede">Please select an option:</p>
+      <div class="wbtns">
+        <button class="bigbtn" data-go="1"><b>Help me ID something from a USVI coral reef &rarr;</b></button>
+        <button class="bigbtn ghost" data-go="learn"><b>I want to learn more &rarr;</b></button>
+      </div>
+      <p class="counter"><b id="subcount">4,287</b> reef observations submitted by the community to date</p>
+    </div>
+  </section>
+
+  <!-- LEARN MORE -->
+  <section class="step" id="step-learn">
+    <div class="h"><h1 class="learnh1">About this <span class="acc">tool</span>.</h1></div>
+    <div class="body learnbody">
+      <nav class="toc"><span class="toclbl">On this page</span><button data-toc="sec-about" type="button">About this tool</button><button data-toc="sec-data" type="button">How we use your entries</button><button data-toc="sec-ids" type="button">All identifications</button><button data-toc="sec-aboutus" type="button">About us</button><button data-toc="sec-gallery" type="button">Gallery</button><button data-toc="sec-models" type="button">AI models</button></nav>
+
+      <h2 class="gallhead" id="sec-about">About this tool</h2>
+      <div class="about">
+        <p>This tool lets managers and community members photograph a reef organism and get a fast, AI-assisted read on what it is and how it is doing. Every submission helps get a current state of reef condition, flags reefs worth a closer look, and notifies us about things to be on alert about.</p>
+        <p><b>How it works.</b> Choose what you saw, upload a photo and outline your subject, and a matching AI model returns an identification in seconds. Your photo is processed in your browser.</p>
+        <ul class="goals">
+          <li>Detect coral bleaching and disease early, at the colony scale</li>
+          <li>Map reefs and their inhabitants</li>
+          <li>Track emerging invasive species</li>
+          <li>Empower the territory and the community to get involved and make real contributions to saving our coral reefs!</li>
+        </ul>
+        <p class="support"><b>Support.</b> Built by the VICAR Lab and supported by grants from [Grant A] and [Grant B] (2027 to 2029).</p>
+      </div>
+
+      <h2 class="gallhead" id="sec-data">How we use your entries</h2>
+      <div class="about">
+        <ul class="goals">
+          <li><b>First response.</b> You get an instant, AI-assisted read on what you photographed. <a href="#sec-models" data-toc="sec-models">Learn more</a></li>
+          <li><b>Aggregated with our monitoring.</b> Your entry joins our long-term reef monitoring to build a current picture of reef condition. <a href="https://vitcrmp.org" target="_blank" rel="noopener">Learn more</a></li>
+          <li><b>Alerts.</b> Entries help us flag bleaching levels and timing (<a href="https://coralreefwatch.noaa.gov" target="_blank" rel="noopener">learn more</a>), disease progression (<a href="https://www.agrra.org/coral-disease-outbreak/" target="_blank" rel="noopener">learn more</a>), and invasive spread (<a href="https://nas.er.usgs.gov" target="_blank" rel="noopener">learn more</a>).</li>
+        </ul>
+        <p class="privacy-note">Your email address is removed within 30 days of a human research expert reviewing the identifications. We only ask for your email in case you submit something truly novel, so we have the chance to ask you for more details. You might find a new species!</p>
+        <p><button class="inlinelink" data-toc="sec-ids" type="button">See all identifications &rarr;</button></p>
+      </div>
+
+      <h2 class="gallhead" id="sec-ids">All identifications</h2>
+      <p class="modintro">Every identification submitted, shown on the map and in the table below (made up for this demonstration). Filter by category to see all identifications in any group.</p>
+      <div class="idfilter" id="idfilter"></div>
+      <div id="map2"></div>
+      <div class="maperr" id="maperr2" style="display:none">Interactive map needs an internet connection.</div>
+      <div class="idtablewrap"><table class="idtable"><thead><tr><th>Date</th><th>Category</th><th>Identification</th><th>Location</th><th>Submitter</th></tr></thead><tbody id="idrows"></tbody></table></div>
+
+      <h2 class="gallhead" id="sec-aboutus">About us</h2>
+      <div class="about">
+        <p><b>The VICAR Lab</b> at the University of the Virgin Islands is part of a large team integrating AI, robotics, and open, reproducible data into coral reef monitoring, so we can see reef change in real time, in finer detail, and across more reefs than we can currently monitor with our team of research divers. Your contributions as citizen scientists are essential to our observations of these reefs. Learn more <a href="https://vicarlab.org" target="_blank" rel="noopener">vicarlab.org</a></p>
+      </div>
+
+      <h2 class="gallhead" id="sec-gallery">Gallery: select &amp; novel images</h2>
+      <div class="gallery gallery2">
+        <figure class="gcard"><img src="gA.jpg" alt="Azure vase sponge" /><figcaption><span class="chip">Sponge: <em>Callyspongia plicifera</em></span><span class="meta">Azure vase sponge &middot; Photo: R. Ennis, TCRMP</span></figcaption></figure>
+        <figure class="gcard"><img src="gB.jpg" alt="TCRMP research divers" /><figcaption><span class="chip b">TCRMP research divers</span><span class="meta">Learn more at <a href="https://vitcrmp.org" target="_blank" rel="noopener">vitcrmp.org</a> &middot; Photo: L. Olinger</span></figcaption></figure>
+      </div>
+
+      <h2 class="gallhead" id="sec-models">The AI models &amp; metrics</h2>
+      <p class="modintro">Deep in the weeds: each subject type is screened by its own model on the VICAR Compute Core. The reef fish model reflects our February 2026 report; the other figures are illustrative for models in active development. Each model links to its report, weights, and a way to contribute training imagery.</p>
+      <div class="models">
+        <div class="mcard" id="model-fish"><h3>Reef fish</h3>
+          <div class="mrow"><span>Framework</span><b>YOLO11-Large &middot; Ultralytics (PyTorch)</b></div>
+          <div class="mrow"><span>Training set</span><b>~9,900 labeled fish &middot; 34 species &amp; morphotypes</b></div>
+          <div class="mrow"><span>Accuracy</span><b>90.4% mAP@50 &middot; precision 89.5%, recall 83.5%</b></div>
+          <div class="mrow"><span>Intended use</span><b>Detect and classify reef fish in survey imagery (screening aid)</b></div>
+          <div class="mrow"><span>Limitations</span><b>Weaker on rare morphotypes and look-alike species; USVI imagery only</b></div>
+          <div class="mrow"><span>License</span><b>CC BY-NC 4.0 (research)</b></div>
+          <div class="mrow"><span>Speed</span><b>2.67 ms / image (~375 img/sec)</b></div>
+          <div class="mrow"><span>Last updated</span><b>February 2026</b></div>
+          <div class="mlinks"><a href="#">Report &amp; metrics</a><a href="https://huggingface.co" target="_blank" rel="noopener">Weights (Hugging Face)</a><a href="https://github.com" target="_blank" rel="noopener">GitHub repo</a><a href="mailto:lauren.olinger@uvi.edu?subject=VICAR%20training%20imagery%20request">Email for training imagery</a></div></div>
+        <div class="mcard" id="model-health"><h3>Coral health &amp; disease</h3>
+          <div class="mrow"><span>Framework</span><b>YOLO11-seg + SAM3</b></div>
+          <div class="mrow"><span>Training set</span><b>~14,000 annotated colonies &middot; 4 condition classes</b></div>
+          <div class="mrow"><span>Accuracy</span><b>87% (illustrative)</b></div>
+          <div class="mrow"><span>Intended use</span><b>Flag bleaching and disease at the colony level</b></div>
+          <div class="mrow"><span>Limitations</span><b>Confuses pale and recently bleached tissue; depth and lighting sensitive</b></div>
+          <div class="mrow"><span>License</span><b>CC BY-NC 4.0 (research)</b></div>
+          <div class="mrow"><span>Last updated</span><b>March 2026</b></div>
+          <div class="mlinks"><a href="#">Report &amp; metrics</a><a href="https://huggingface.co" target="_blank" rel="noopener">Weights (Hugging Face)</a><a href="https://github.com" target="_blank" rel="noopener">GitHub repo</a><a href="mailto:lauren.olinger@uvi.edu?subject=VICAR%20training%20imagery%20request">Email for training imagery</a></div></div>
+        <div class="mcard" id="model-coralsp"><h3>Coral species</h3>
+          <div class="mrow"><span>Framework</span><b>YOLO11 + visual-language (OnDeck)</b></div>
+          <div class="mrow"><span>Training set</span><b>~12,500 colonies &middot; 7+ species</b></div>
+          <div class="mrow"><span>Accuracy</span><b>84% top-1 (illustrative)</b></div>
+          <div class="mrow"><span>Intended use</span><b>Identify reef-building coral to species</b></div>
+          <div class="mrow"><span>Limitations</span><b>Similar species and partial colonies reduce confidence</b></div>
+          <div class="mrow"><span>License</span><b>CC BY-NC 4.0 (research)</b></div>
+          <div class="mrow"><span>Last updated</span><b>March 2026</b></div>
+          <div class="mlinks"><a href="#">Report &amp; metrics</a><a href="https://huggingface.co" target="_blank" rel="noopener">Weights (Hugging Face)</a><a href="https://github.com" target="_blank" rel="noopener">GitHub repo</a><a href="mailto:lauren.olinger@uvi.edu?subject=VICAR%20training%20imagery%20request">Email for training imagery</a></div></div>
+        <div class="mcard" id="model-sponge"><h3>Sponge</h3>
+          <div class="mrow"><span>Framework</span><b>YOLO11-Large</b></div>
+          <div class="mrow"><span>Training set</span><b>~6,200 images &middot; 8 species</b></div>
+          <div class="mrow"><span>Accuracy</span><b>80% mAP@50 (illustrative)</b></div>
+          <div class="mrow"><span>Intended use</span><b>Identify common Caribbean sponges to species</b></div>
+          <div class="mrow"><span>Limitations</span><b>Growth-form overlap among species</b></div>
+          <div class="mrow"><span>License</span><b>CC BY-NC 4.0 (research)</b></div>
+          <div class="mrow"><span>Last updated</span><b>January 2026</b></div>
+          <div class="mlinks"><a href="#">Report &amp; metrics</a><a href="https://huggingface.co" target="_blank" rel="noopener">Weights (Hugging Face)</a><a href="https://github.com" target="_blank" rel="noopener">GitHub repo</a><a href="mailto:lauren.olinger@uvi.edu?subject=VICAR%20training%20imagery%20request">Email for training imagery</a></div></div>
+        <div class="mcard" id="model-seafan"><h3>Sea fan / octocoral</h3>
+          <div class="mrow"><span>Framework</span><b>YOLO11-Large</b></div>
+          <div class="mrow"><span>Training set</span><b>~4,300 images &middot; 7 taxa</b></div>
+          <div class="mrow"><span>Accuracy</span><b>78% mAP@50 (illustrative)</b></div>
+          <div class="mrow"><span>Intended use</span><b>Identify sea fans and other octocorals</b></div>
+          <div class="mrow"><span>Limitations</span><b>Genus-level confusion among gorgonians</b></div>
+          <div class="mrow"><span>License</span><b>CC BY-NC 4.0 (research)</b></div>
+          <div class="mrow"><span>Last updated</span><b>January 2026</b></div>
+          <div class="mlinks"><a href="#">Report &amp; metrics</a><a href="https://huggingface.co" target="_blank" rel="noopener">Weights (Hugging Face)</a><a href="https://github.com" target="_blank" rel="noopener">GitHub repo</a><a href="mailto:lauren.olinger@uvi.edu?subject=VICAR%20training%20imagery%20request">Email for training imagery</a></div></div>
+        <div class="mcard" id="model-algae"><h3>Macroalgae</h3>
+          <div class="mrow"><span>Framework</span><b>SAM3 segmentation</b></div>
+          <div class="mrow"><span>Training set</span><b>~9,000 patches &middot; 5 functional groups</b></div>
+          <div class="mrow"><span>Accuracy</span><b>82% (illustrative)</b></div>
+          <div class="mrow"><span>Intended use</span><b>Classify algae into functional groups</b></div>
+          <div class="mrow"><span>Limitations</span><b>Turf and crustose forms overlap</b></div>
+          <div class="mrow"><span>License</span><b>CC BY-NC 4.0 (research)</b></div>
+          <div class="mrow"><span>Last updated</span><b>February 2026</b></div>
+          <div class="mlinks"><a href="#">Report &amp; metrics</a><a href="https://huggingface.co" target="_blank" rel="noopener">Weights (Hugging Face)</a><a href="https://github.com" target="_blank" rel="noopener">GitHub repo</a><a href="mailto:lauren.olinger@uvi.edu?subject=VICAR%20training%20imagery%20request">Email for training imagery</a></div></div>
+        <div class="mcard" id="model-invasive"><h3>Invasive species</h3>
+          <div class="mrow"><span>Framework</span><b>YOLO11 binary detector</b></div>
+          <div class="mrow"><span>Training set</span><b>~5,000 images &middot; Xenia / Unomia</b></div>
+          <div class="mrow"><span>Accuracy</span><b>93% recall (illustrative)</b></div>
+          <div class="mrow"><span>Intended use</span><b>Early detection of pulsing soft corals (Xenia / Unomia)</b></div>
+          <div class="mrow"><span>Limitations</span><b>Look-alike native soft corals</b></div>
+          <div class="mrow"><span>License</span><b>CC BY-NC 4.0 (research)</b></div>
+          <div class="mrow"><span>Last updated</span><b>April 2026</b></div>
+          <div class="mlinks"><a href="#">Report &amp; metrics</a><a href="https://huggingface.co" target="_blank" rel="noopener">Weights (Hugging Face)</a><a href="https://github.com" target="_blank" rel="noopener">GitHub repo</a><a href="mailto:lauren.olinger@uvi.edu?subject=VICAR%20training%20imagery%20request">Email for training imagery</a></div></div>
+      </div>
+    </div>
+    <div class="nav"><button class="btn ghost" data-go="welcome">&larr; Back</button><span class="spacer"></span><button class="btn" data-go="1">Screen a photo &rarr;</button></div>
+  </section>
+
+  <!-- STEP 1: what did you see -->
+  <section class="step" id="step-1">
+    <div class="h"><h1>We appreciate your contribution and <span class="acc">curiosity</span>.</h1>
+      <p class="sub">Please tell us what you think you saw. We will run the matching model.</p></div>
+    <div class="body">
+      <div class="opts">
+        <button class="opt" data-pick="coral"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-9" /><path d="M12 16.5c-2.6-1.4-4-3-4-6" /><path d="M12 14.2c2.6-1.4 4-3 4-6" /><circle cx="12" cy="11" r="1.4" fill="currentColor" stroke="none"/><circle cx="8" cy="9.4" r="1.3" fill="currentColor" stroke="none"/><circle cx="16" cy="9.4" r="1.3" fill="currentColor" stroke="none"/></svg></span><span class="n">Coral</span><h3>A sick coral</h3><p>Check a coral for bleaching or disease, and identify it.</p></button>
+        <button class="opt" data-pick="invasive"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l8.5 15h-17z" /><path d="M12 10v4.2" /><path d="M12 17.4h.01" /></svg></span><span class="n">Invasive</span><h3>An invasive species</h3><p>A quick yes or no check for invasives such as pulsing soft corals.</p></button>
+        <button class="opt" id="elseBtn"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.2" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="17.8" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg></span><span class="n">More</span><h3>Something else&hellip;</h3><p>Algae, sponge, sea fan, fish, or not sure. Tap to choose.</p></button>
+      </div>
+    </div>
+    <div class="nav"><button class="btn ghost" data-go="welcome">&larr; Back</button><span class="spacer"></span><span class="hinttext">Pick one to continue</span></div>
+  </section>
+
+  <!-- STEP 1b: something else -->
+  <section class="step" id="step-else">
+    <div class="h"><h1>What did you <span class="acc">see</span>?</h1>
+      <p class="sub">Pick the closest match and we will run that model.</p></div>
+    <div class="body">
+      <div class="opts">
+        <button class="opt" data-pick="algae"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10 21c-3.2-4-3.4-9-1.2-13.4" /><path d="M14 21c3.4-4.2 3.4-9.6.4-13.6" /><path d="M12 21c.2-4 .2-8 0-12" /></svg></span><span class="n">Algae</span><h3>An algae</h3><p>Macroalgae and turf.</p></button>
+        <button class="opt" data-pick="sponge"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M7 8.3c0-1.6 2.2-2.6 5-2.6s5 1 5 2.6v8.4c0 1.5-2.2 2.6-5 2.6s-5-1.1-5-2.6z" /><path d="M7 8.3c0 1.6 2.2 2.6 5 2.6s5-1 5-2.6" /><circle cx="10" cy="13" r="0.9" fill="currentColor" stroke="none"/><circle cx="14" cy="15" r="0.9" fill="currentColor" stroke="none"/></svg></span><span class="n">Sponge</span><h3>A sponge</h3><p>Barrel, tube, rope, vase, and more.</p></button>
+        <button class="opt" data-pick="seafan"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V8" /><path d="M12 8C6.8 8 5 13 5 16.5" /><path d="M12 8c5.2 0 7 5 7 8.5" /><path d="M9.2 9.2C8 10.4 7.4 12.6 7.6 15.5" /><path d="M14.8 9.2c1.2 1.2 1.8 3.4 1.6 6.3" /></svg></span><span class="n">Sea fan</span><h3>A sea fan</h3><p>Sea fans, plumes, and other octocorals.</p></button>
+        <button class="opt" data-pick="fish"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12c3-4.2 7.5-4.2 10.5 0-3 4.2-7.5 4.2-10.5 0z" /><path d="M14 12c1.8-2 3.8-3 6.5-3-.6 2-.6 4 0 6-2.7 0-4.7-1-6.5-3z" /><circle cx="6.8" cy="11" r="0.8" fill="currentColor" stroke="none"/></svg></span><span class="n">Fish</span><h3>A fish</h3><p>Any reef fish.</p></button>
+        <button class="opt" data-pick="all"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5" /><path d="M9.6 9.6a2.6 2.6 0 015 .2c0 1.8-2.6 2.1-2.6 4" /><path d="M12 17.4h.01" /></svg></span><span class="n">Not sure</span><h3>I do not know, help me find out</h3><p>Runs every model and returns the best match.</p></button>
+      </div>
+    </div>
+    <div class="nav"><button class="btn ghost" data-go="1">&larr; Back</button><span class="spacer"></span><span class="hinttext">Pick one to continue</span></div>
+  </section>
+
+  <!-- STEP 2: photo -->
+  <section class="step" id="step-2">
+    <div class="h"><h1>Upload a photo &amp; <span class="acc">outline</span> your target.</h1></div>
+    <div class="body"><div class="two">
+      <div class="imgcol">
+        <label class="drop" id="drop" tabindex="0" aria-label="Upload a photo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 16V4m0 0L7 9m5-5l5 5" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round"/></svg>
+          <div class="big">Drop a photo here</div><div class="small">or click to choose &middot; JPG / PNG</div>
+          <input type="file" id="file" accept="image/*" />
+        </label>
+        <div class="frame" id="frame" style="display:none">
+          <img id="previewImg" alt="Selected photo" />
+          <div class="bboxlayer" id="bboxlayer">
+            <div class="bboxhint" id="bboxhint"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 9V5a2 2 0 012-2h4M21 9V5a2 2 0 00-2-2h-4M3 15v4a2 2 0 002 2h4M21 15v4a2 2 0 01-2 2h-4" stroke-linecap="round"/><rect x="8.5" y="8.5" width="7" height="7" stroke-dasharray="2 2"/></svg>Drag a box around <b>your subject</b><span class="o">coral or otherwise &middot; required</span></div>
+            <div class="bboxrect" id="bboxrect"></div>
+          </div>
+        </div>
+        <button class="reupload" id="reupload" type="button" style="display:none">&#8635;&nbsp; Upload another photo</button>
+      </div>
+      <div class="helpcard">
+        <div class="kicker">Box your subject &middot; required</div>
+        <div class="boxinstr" id="boxinstr">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 9V5a2 2 0 012-2h4M21 9V5a2 2 0 00-2-2h-4M3 15v4a2 2 0 002 2h4M21 15v4a2 2 0 01-2 2h-4" stroke-linecap="round"/><rect x="8.5" y="8.5" width="7" height="7" stroke-dasharray="2 2"/></svg>
+          <div><b id="bititle">Draw a box around your subject (required)</b>
+            <span id="bisub">Even with just one subject in the frame, outline it. This tells our AI model exactly what to read and makes it work better. Click and drag on the photo.</span>
+            <button class="clearbtn" id="selclear" type="button" style="display:none">Clear box</button>
+          </div>
+        </div>
+        <div class="tips"><span class="lbl">For a good photo</span>
+          <span class="t">Subject filling the frame</span><span class="t">Sharp focus, steady shot</span><span class="t">Even, natural light</span></div>
+      </div>
+    </div></div>
+    <div class="nav"><button class="btn ghost" data-go="1">&larr; Back</button><span class="spacer"></span><span class="hinttext" id="h2">Upload a photo to continue</span><button class="btn" id="n2" disabled>Continue &rarr;</button></div>
+  </section>
+
+  <!-- STEP 3: details -->
+  <section class="step" id="step-3">
+    <div class="h"><h1>Where, and <span class="acc">who</span>?</h1>
+      <p class="sub">Tag your observation. This is required to see results.</p></div>
+    <div class="body"><div class="det">
+      <div class="mapcol">
+        <div id="map"></div>
+        <div class="maperr" id="maperr">Interactive map needs an internet connection. Type a site name or coordinates below.</div>
+      </div>
+      <div class="form">
+        <div class="fld" id="f-loc"><label>General location <span class="req">required</span></label><input id="loc" type="text" placeholder="Click the map near where you saw it (St. Thomas)" /></div>
+        <div class="fld" id="f-first"><label>First name <span class="req">required</span></label><input id="sfirst" type="text" placeholder="First name" autocomplete="given-name" /></div>
+        <div class="fld" id="f-last"><label>Last name <span class="req">required</span></label><input id="slast" type="text" placeholder="Last name" autocomplete="family-name" /></div>
+        <div class="fld" id="f-email"><label>Email <span class="req">required</span></label><input id="semail" type="email" placeholder="you@example.com" autocomplete="email" /><div class="help">We will never email you unless you submit a truly noteworthy image.</div></div>
+        <div class="fld"><label>Observation note <span style="color:var(--mut)">optional</span></label><textarea id="snote" rows="2" placeholder="Anything you noticed: depth, behavior, how widespread, etc."></textarea></div>
+        <div class="fld tos" id="f-tos"><label class="tosrow"><input id="tos" type="checkbox" /> <span>I agree to the <a href="terms.html" target="_blank" rel="noopener">Terms of Service</a> (opens in a new tab): my submitted images may be used by UVI scientists for analysis, model training, and display under a CC BY-NC 4.0 license.</span></label></div>
+      </div>
+    </div></div>
+    <div class="nav"><button class="btn ghost" data-go="2">&larr; Back</button><span class="spacer"></span><span class="hinttext" id="h3">Enter location, name &amp; email to continue</span><button class="btn" id="n3" disabled>Run AI model &rarr;</button></div>
+  </section>
+
+  <!-- STEP 4: results -->
+  <section class="step" id="step-4">
+    <div class="h"><h1>Your screening <span class="acc">read-out</span>.</h1>
+      <p class="runline" id="runline"></p></div>
+    <div class="body"><div class="results" id="results"></div></div>
+    <div class="nav"><button class="btn ghost" data-go="3">&larr; Back</button><span class="spacer"></span><button class="btn" id="restart">&#8635;&nbsp; Screen another &middot; start over</button></div>
+  </section>
+
+</div></main>
+
+<div class="loader" id="loader" role="status" aria-live="polite">
+  <div class="loadbox">
+    <div class="kicker">Running AI model</div>
+    <div class="loadstage" id="loadstage">Preprocessing image&hellip;</div>
+    <div class="loadtrack"><div class="loadfill" id="loadfill"></div></div>
+    <div class="loadpct mono" id="loadpct">0%</div>
+  </div>
+</div>
+
+<footer class="site"><div class="wrap">
+  <div class="disc"><img src="vicar-logo-long.png" alt="VICAR" />Results are from an AI model and can make mistakes. Submitted images are used by UVI scientists for analysis and quality control. <a href="#" id="learnlink">Learn more</a>.</div>
+  <div class="cred">Oceankind Phase III.1 &middot; Discovery and Diagnosis &middot; <b>Proof of Concept for Proposal, 17 June 2026</b> &middot; L. Olinger</div>
+</div></footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+(function(){
+  "use strict";
+  var $=function(id){return document.getElementById(id);};
+  var choice=null, hasImage=false, selection=null;
+  var prog=$('prog');
+
+  function goStep(name){
+    document.querySelectorAll('.step').forEach(function(s){s.classList.remove('active');});
+    var el=$('step-'+name); if(el) el.classList.add('active');
+    var wiz=['1','2','3','4','else'].indexOf(name)>=0;
+    prog.style.visibility=wiz?'visible':'hidden';
+    if(wiz){var n=(name==='else')?1:+name;document.querySelectorAll('#prog .p').forEach(function(p){var s=+p.dataset.s;p.classList.toggle('on',s===n);p.classList.toggle('done',s<n);});}
+    if(name==='2') setTimeout(positionLayer,60);
+    if(name==='3'){ initMap(); checkForm(); }
+    if(name==='learn'){ buildFilter(); initMap2(); renderIds(); }
+    if(name==='welcome') typeWelcome();
+    window.scrollTo(0,0);
+  }
+  document.querySelectorAll('[data-go]').forEach(function(b){ b.addEventListener('click',function(){ goStep(b.dataset.go); }); });
+  $('learnlink').addEventListener('click',function(e){ e.preventDefault(); goStep('learn'); });
+  document.querySelectorAll('[data-toc]').forEach(function(b){ b.addEventListener('click',function(){ var el=$(b.dataset.toc); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }); });
+  $('homebrand').addEventListener('click',function(e){ e.preventDefault(); goStep('welcome'); });
+
+  /* ---- step 1: pick, auto-advance ---- */
+  var MODELS={coral:['health','species'],invasive:['invasive'],algae:['algae'],sponge:['sponge'],seafan:['seafan'],fish:['fish'],all:['health','species','fish','sponge','seafan','algae','invasive']};
+  function pick(val,el){ choice=val; document.querySelectorAll('.opt').forEach(function(o){o.classList.remove('sel');}); if(el)el.classList.add('sel'); setTimeout(function(){ goStep('2'); },190); }
+  document.querySelectorAll('.opt[data-pick]').forEach(function(o){ o.addEventListener('click',function(){ pick(o.dataset.pick,o); }); });
+  $('elseBtn').addEventListener('click',function(){ goStep('else'); });
+
+  /* ---- step 2: upload + bbox ---- */
+  var fileInput=$('file'),drop=$('drop'),frame=$('frame'),previewImg=$('previewImg'),
+      layer=$('bboxlayer'),rect=$('bboxrect'),bboxhint=$('bboxhint'),
+      boxinstr=$('boxinstr'),bititle=$('bititle'),bisub=$('bisub'),selclear=$('selclear'),reupload=$('reupload');
+  function updateN2(){ var ready=hasImage&&!!selection; $('n2').disabled=!ready; var msg=!hasImage?'Upload a photo to continue':(!selection?'Draw a box around your subject to continue':''); $('h2').textContent=msg; $('h2').style.display=msg?'':'none'; }
+  function loadFile(file){
+    if(!file||!file.type||file.type.indexOf('image/')!==0) return;
+    var r=new FileReader();
+    r.onload=function(e){ previewImg.onload=function(){positionLayer();bboxhint.classList.add('show');};
+      previewImg.src=e.target.result; drop.style.display='none'; frame.style.display='flex'; reupload.style.display='inline-block';
+      hasImage=true; clearSelection(); updateN2(); };
+    r.readAsDataURL(file);
+  }
+  fileInput.addEventListener('change',function(){if(this.files[0])loadFile(this.files[0]);});
+  reupload.addEventListener('click',function(){fileInput.click();});
+  ['dragenter','dragover'].forEach(function(ev){drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.add('drag');});});
+  ['dragleave','drop'].forEach(function(ev){drop.addEventListener(ev,function(e){e.preventDefault();drop.classList.remove('drag');});});
+  drop.addEventListener('drop',function(e){if(e.dataTransfer&&e.dataTransfer.files[0])loadFile(e.dataTransfer.files[0]);});
+  drop.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();fileInput.click();}});
+  $('n2').addEventListener('click',function(){ if(hasImage&&selection) goStep('3'); });
+
+  function positionLayer(){ if(!previewImg.naturalWidth||frame.style.display==='none')return; var fr=frame.getBoundingClientRect(); var sc=Math.min(fr.width/previewImg.naturalWidth,fr.height/previewImg.naturalHeight); var w=previewImg.naturalWidth*sc,h=previewImg.naturalHeight*sc; layer.style.width=w+'px';layer.style.height=h+'px';layer.style.left=((fr.width-w)/2)+'px';layer.style.top=((fr.height-h)/2)+'px'; if(selection)drawFromNorm(); }
+  window.addEventListener('resize',positionLayer);
+  var drawing=false,sx=0,sy=0;
+  function pt(e){var r=layer.getBoundingClientRect();var t=e.touches?e.touches[0]:e;return{x:Math.max(0,Math.min(r.width,t.clientX-r.left)),y:Math.max(0,Math.min(r.height,t.clientY-r.top)),w:r.width,h:r.height};}
+  function start(e){if(!hasImage)return;e.preventDefault();bboxhint.classList.remove('show');var p=pt(e);drawing=true;sx=p.x;sy=p.y;rect.style.display='block';rect.style.left=sx+'px';rect.style.top=sy+'px';rect.style.width='0';rect.style.height='0';}
+  function move(e){if(!drawing)return;e.preventDefault();var p=pt(e);rect.style.left=Math.min(sx,p.x)+'px';rect.style.top=Math.min(sy,p.y)+'px';rect.style.width=Math.abs(p.x-sx)+'px';rect.style.height=Math.abs(p.y-sy)+'px';}
+  function end(e){if(!drawing)return;drawing=false;var p=pt(e);var w=Math.abs(p.x-sx),h=Math.abs(p.y-sy);if(w<14||h<14){clearSelection();return;}selection={x:Math.min(sx,p.x)/p.w,y:Math.min(sy,p.y)/p.h,w:w/p.w,h:h/p.h};boxinstr.classList.add('done');bititle.innerHTML='&#10003; Subject boxed';bisub.textContent='The model will read only this region. Drag again to redraw.';selclear.style.display='inline-block';updateN2();}
+  layer.addEventListener('mousedown',start);window.addEventListener('mousemove',move);window.addEventListener('mouseup',end);
+  layer.addEventListener('touchstart',start,{passive:false});layer.addEventListener('touchmove',move,{passive:false});layer.addEventListener('touchend',end);
+  function drawFromNorm(){var r=layer.getBoundingClientRect();rect.style.display='block';rect.style.left=(selection.x*r.width)+'px';rect.style.top=(selection.y*r.height)+'px';rect.style.width=(selection.w*r.width)+'px';rect.style.height=(selection.h*r.height)+'px';}
+  function clearSelection(){selection=null;rect.style.display='none';boxinstr.classList.remove('done');bititle.textContent='Draw a box around your subject (required)';bisub.textContent='Even with just one subject in the frame, outline it. This tells our AI model exactly what to read and makes it work better. Click and drag on the photo.';selclear.style.display='none';if(hasImage&&frame.style.display!=='none')bboxhint.classList.add('show');updateN2();}
+  selclear.addEventListener('click',clearSelection);
+
+  /* ---- step 3: map + validate ---- */
+  // bounds framing St. Thomas (zoomed in)
+  var USVI=[[18.295,-65.045],[18.405,-64.825]];
+  var map=null,marker=null;
+  function fillLoc(ll){$('loc').value=ll.lat.toFixed(3)+', '+ll.lng.toFixed(3);$('f-loc').classList.remove('bad');checkForm();}
+  function setPin(ll){if(!marker){marker=L.marker(ll,{draggable:true}).addTo(map);marker.on('dragend',function(){fillLoc(marker.getLatLng());});}else marker.setLatLng(ll);fillLoc(ll);}
+  function initMap(){ if(map){setTimeout(function(){map.invalidateSize();map.fitBounds(USVI);},60);return;} if(typeof L==='undefined'){$('map').style.display='none';$('maperr').style.display='flex';return;}
+    var b=L.latLngBounds(USVI);
+    map=L.map('map',{scrollWheelZoom:true,minZoom:10,maxBounds:b.pad(0.35),maxBoundsViscosity:0.75});
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Imagery &copy; Esri, Maxar, Earthstar Geographics'}).addTo(map);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,opacity:.9}).addTo(map);
+    map.fitBounds(b);
+    map.on('click',function(e){setPin(e.latlng);});
+    setTimeout(function(){map.invalidateSize();map.fitBounds(b);},60); }
+  function validate(){var loc=$('loc').value.trim(),fn=$('sfirst').value.trim(),ln=$('slast').value.trim(),em=$('semail').value.trim();var re=/^[^\s@]+@[^\s@]+\.[^\s@]+$/,ok=true;var tos=$('tos')&&$('tos').checked;
+    $('f-loc').classList.toggle('bad',!loc);if(!loc)ok=false;
+    $('f-first').classList.toggle('bad',!fn);if(!fn)ok=false;
+    $('f-last').classList.toggle('bad',!ln);if(!ln)ok=false;
+    $('f-email').classList.toggle('bad',!re.test(em));if(!re.test(em))ok=false;
+    $('f-tos').classList.toggle('bad',!tos);if(!tos)ok=false;
+    return ok;}
+  function checkForm(){var loc=$('loc').value.trim(),fn=$('sfirst').value.trim(),ln=$('slast').value.trim(),em=$('semail').value.trim();var re=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;var tos=$('tos')&&$('tos').checked;var ok=loc&&fn&&ln&&re.test(em)&&tos;$('n3').disabled=!ok;$('h3').style.display=ok?'none':'';return ok;}
+  ['loc','sfirst','slast','semail'].forEach(function(id){$(id).addEventListener('input',checkForm);});
+  if($('tos')) $('tos').addEventListener('change',checkForm);
+  function runModelFlow(done){
+    var L2=$('loader'),fill=$('loadfill'),pctEl=$('loadpct'),stageEl=$('loadstage');
+    var stages = choice==='all'
+      ? ['Preprocessing image…','Locating subject in box…','Running coral models…','Running fish model…','Running sponge model…','Calibrating &amp; compiling…']
+      : ['Preprocessing image…','Locating subject in box…','Running classifier…','Calibrating confidence…','Compiling read-out…'];
+    var spd=choice==='all'?3.4:6.0;
+    L2.classList.add('show'); var pct=0,si=-1; fill.style.width='0';pctEl.textContent='0%';
+    var iv=setInterval(function(){
+      pct+=Math.random()*spd+1.5; if(pct>100)pct=100;
+      fill.style.width=pct+'%'; pctEl.textContent=Math.round(pct)+'%';
+      var ns=Math.min(stages.length-1,Math.floor(pct/(100/stages.length))); if(ns!==si){si=ns;stageEl.innerHTML=stages[si];}
+      if(pct>=100){clearInterval(iv);setTimeout(function(){L2.classList.remove('show');done();},300);}
+    },85);
+  }
+  $('n3').addEventListener('click',function(){ if($('n3').disabled||!validate())return; runModelFlow(function(){ renderResults(); goStep('4'); }); });
+
+  /* ---- all identifications (demo data) ---- */
+  var IDS=[
+    {d:'2026-06-14',c:'health',id:'Bleached <em>Orbicella</em>',loc:'Black Point',lat:18.343,lng:-64.985,who:'Maria S.'},
+    {d:'2026-06-14',c:'fish',id:'<em>Sparisoma viride</em>',loc:'Brewers Bay',lat:18.344,lng:-64.978,who:'Devon P.'},
+    {d:'2026-06-13',c:'invasive',id:'No invasive detected',loc:'Magens Bay',lat:18.363,lng:-64.924,who:'Akeem R.'},
+    {d:'2026-06-13',c:'coralsp',id:'<em>Montastraea cavernosa</em>',loc:'Coki Point',lat:18.354,lng:-64.870,who:'Jen L.'},
+    {d:'2026-06-12',c:'sponge',id:'<em>Xestospongia muta</em>',loc:'Botany Bay',lat:18.356,lng:-65.030,who:'Carlos F.'},
+    {d:'2026-06-12',c:'seafan',id:'<em>Gorgonia ventalina</em>',loc:'Hull Bay',lat:18.372,lng:-64.945,who:'Tasha B.'},
+    {d:'2026-06-11',c:'algae',id:'Fleshy macroalgae',loc:'Water Island',lat:18.318,lng:-64.955,who:'Sam G.'},
+    {d:'2026-06-11',c:'health',id:'Healthy colony',loc:'Sapphire',lat:18.336,lng:-64.852,who:'Priya N.'},
+    {d:'2026-06-10',c:'fish',id:'<em>Thalassoma bifasciatum</em>',loc:'Frenchman Bay',lat:18.317,lng:-64.916,who:'Leo M.'},
+    {d:'2026-06-10',c:'invasive',id:'Possible <em>Xenia</em>',loc:'Botany Bay',lat:18.355,lng:-65.028,who:'Nia W.'},
+    {d:'2026-06-09',c:'coralsp',id:'<em>Colpophyllia natans</em>',loc:'Magens Bay',lat:18.362,lng:-64.922,who:'Omar D.'},
+    {d:'2026-06-09',c:'sponge',id:'<em>Aplysina fistularis</em>',loc:'Coki Point',lat:18.353,lng:-64.872,who:'Ana R.'},
+    {d:'2026-06-08',c:'fish',id:'<em>Acanthurus coeruleus</em>',loc:'Brewers Bay',lat:18.345,lng:-64.980,who:'Kofi A.'},
+    {d:'2026-06-08',c:'health',id:'Disease (SCTLD)',loc:'Black Point',lat:18.342,lng:-64.986,who:'Lena V.'},
+    {d:'2026-06-07',c:'seafan',id:'<em>Antillogorgia americana</em>',loc:'Hull Bay',lat:18.371,lng:-64.947,who:'Marcus T.'},
+    {d:'2026-06-07',c:'algae',id:'Turf algae',loc:'Sapphire',lat:18.335,lng:-64.853,who:'Ivy C.'}
+  ];
+  var CATLBL={health:'Coral health',coralsp:'Coral species',fish:'Fish',sponge:'Sponge',seafan:'Sea fan',algae:'Algae',invasive:'Invasive'};
+  var idMap=null,idLayer=null,curFilter='all';
+  function initMap2(){ if(idMap){setTimeout(function(){idMap.invalidateSize();idMap.fitBounds(USVI);},60);return;} if(typeof L==='undefined'){$('map2').style.display='none';$('maperr2').style.display='flex';return;}
+    var b=L.latLngBounds(USVI);
+    idMap=L.map('map2',{scrollWheelZoom:true,minZoom:10,maxBounds:b.pad(0.4),maxBoundsViscosity:0.7});
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Imagery &copy; Esri'}).addTo(idMap);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,opacity:.9}).addTo(idMap);
+    idLayer=L.layerGroup().addTo(idMap); idMap.fitBounds(b);
+    setTimeout(function(){idMap.invalidateSize();idMap.fitBounds(b);},80); }
+  function buildFilter(){ var bar=$('idfilter'); if(!bar)return; var cats=['all','health','coralsp','fish','sponge','seafan','algae','invasive']; bar.innerHTML='';
+    cats.forEach(function(c){ var btn=document.createElement('button'); btn.type='button'; btn.textContent=(c==='all'?'All':CATLBL[c]); if(c===curFilter)btn.className='on'; btn.addEventListener('click',function(){curFilter=c;buildFilter();renderIds();}); bar.appendChild(btn); }); }
+  function renderIds(){ var rows=$('idrows'); if(!rows)return; rows.innerHTML=''; if(idLayer)idLayer.clearLayers();
+    IDS.filter(function(x){return curFilter==='all'||x.c===curFilter;}).forEach(function(x){
+      var tr=document.createElement('tr'); tr.innerHTML='<td>'+x.d+'</td><td>'+CATLBL[x.c]+'</td><td>'+x.id+'</td><td>'+x.loc+'</td><td>'+x.who+'</td>'; rows.appendChild(tr);
+      if(idLayer&&typeof L!=='undefined'){ var m=L.marker([x.lat,x.lng]); m.bindPopup('<b>'+x.id+'</b><br>'+CATLBL[x.c]+' &middot; '+x.loc+'<br>'+x.who+' &middot; '+x.d); idLayer.addLayer(m); }
+    });
+  }
+
+  /* ===== MODEL INTEGRATION POINT: replace the placeholder generators with a real classifier ===== */
+  var HEALTH=[{n:'Healthy',t:'normal pigmentation'},{n:'Bleached',t:'heat-stress paling'},{n:'Diseased',t:'tissue-loss / SCTLD'},{n:'Other / Unclear',t:'algae, predation, low conf.'}];
+  var CORAL=[{name:'Orbicella faveolata',tag:'mountainous star coral'},{name:'Montastraea cavernosa',tag:'great star coral'},{name:'Colpophyllia natans',tag:'boulder brain coral'},{name:'Pseudodiploria strigosa',tag:'symmetrical brain coral'},{name:'Porites astreoides',tag:'mustard hill coral'},{name:'Agaricia agaricites',tag:'lettuce coral'},{name:'Siderastrea siderea',tag:'massive starlet coral'}];
+  var FISH=[{name:'Thalassoma bifasciatum',tag:'bluehead wrasse'},{name:'Stegastes partitus',tag:'bicolor damselfish'},{name:'Stegastes planifrons',tag:'threespot damselfish'},{name:'Sparisoma viride',tag:'stoplight parrotfish'},{name:'Sparisoma aurofrenatum',tag:'redband parrotfish'},{name:'Scarus vetula',tag:'queen parrotfish'},{name:'Acanthurus coeruleus',tag:'blue tang'},{name:'Chromis cyanea',tag:'blue chromis'},{name:'Haemulon flavolineatum',tag:'French grunt'},{name:'Epinephelus guttatus',tag:'red hind'}];
+  var SPONGE=[{name:'Xestospongia muta',tag:'giant barrel sponge'},{name:'Aplysina fistularis',tag:'yellow tube sponge'},{name:'Aplysina archeri',tag:'stove-pipe sponge'},{name:'Aplysina cauliformis',tag:'row pore rope sponge'},{name:'Callyspongia vaginalis',tag:'branching vase sponge'},{name:'Ircinia strobilina',tag:'black-ball sponge'},{name:'Agelas clathrodes',tag:'orange elephant ear'},{name:'Niphates digitalis',tag:'pink vase sponge'}];
+  var SEAFAN=[{name:'Gorgonia ventalina',tag:'common sea fan'},{name:'Gorgonia flabellum',tag:'Venus sea fan'},{name:'Antillogorgia americana',tag:'slimy sea plume'},{name:'Pseudoplexaura porosa',tag:'porous sea rod'},{name:'Plexaura homomalla',tag:'black sea rod'},{name:'Eunicea flexuosa',tag:'bent sea rod'},{name:'Pterogorgia citrina',tag:'yellow sea blade'}];
+  var ALGAE=[{name:'Fleshy macroalgae'},{name:'Turf algae'},{name:'Calcified green algae'},{name:'Crustose coralline algae (CCA)'},{name:'Cyanobacterial mat'}];
+  function norm(a){var s=a.reduce(function(x,y){return x+y;},0);return a.map(function(v){return v/s;});}
+  function rankSp(list,k){var pick=list.slice().sort(function(){return Math.random()-0.5;}).slice(0,k);var raw=norm(pick.map(function(){return Math.pow(Math.random(),1.5);}).sort(function(a,b){return b-a;}));return pick.map(function(o,i){return{name:o.name,tag:o.tag,p:raw[i]};});}
+  function phHealth(){var raw=HEALTH.map(function(){return Math.pow(Math.random(),1.7);});raw[Math.floor(Math.random()*4)]+=1.1;raw=norm(raw);return HEALTH.map(function(c,i){return{name:c.n,tag:c.t,p:raw[i]};}).sort(function(a,b){return b.p-a.p;});}
+  function phInvasive(){var yes=Math.random()<0.4;return{yes:yes,conf:yes?(0.6+Math.random()*0.38):(0.7+Math.random()*0.29)};}
+  function srcText(){return 'Source: '+(selection?'boxed target':'whole image');}
+  function openModelInfo(key){ goStep('learn'); setTimeout(function(){ var el=$('model-'+key); if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); el.classList.add('flash'); setTimeout(function(){el.classList.remove('flash');},1700); } },160); }
+  function card(title,key){var d=document.createElement('div');d.className='rcard';var rh=document.createElement('div');rh.className='rh';rh.innerHTML='<h3>'+title+'</h3>';if(key){var a=document.createElement('button');a.className='modellink';a.type='button';a.innerHTML='About this model &rarr;';a.addEventListener('click',function(){openModelInfo(key);});rh.appendChild(a);}else{var s=document.createElement('span');s.className='st';s.textContent='VICAR model';rh.appendChild(s);}d.appendChild(rh);return d;}
+  function barsInto(d,rows,fmt){var c=document.createElement('div');c.className='classes';rows.forEach(function(r,idx){var pct=Math.round(r.p*100);var e=document.createElement('div');e.className='cls'+(idx===0?' lead':'');e.innerHTML='<div class="row"><div class="name">'+fmt(r)+'</div><div class="pct">'+pct+'%</div></div><div class="track"><div class="fill"></div></div>';c.appendChild(e);var f=e.querySelector('.fill');requestAnimationFrame(function(){setTimeout(function(){f.style.width=pct+'%';},50*idx+60);});});d.appendChild(c);var s=document.createElement('div');s.className='src';s.textContent=srcText();d.appendChild(s);}
+  var spFmt=function(r){return '<em>'+r.name+'</em>'+(r.tag?'<i>'+r.tag+'</i>':'');};
+  var algFmt=function(r){return r.name;};
+  function buildHealth(){var d=card('Coral health','health');barsInto(d,phHealth(),function(r){return r.name+'<i>'+r.tag+'</i>';});return d;}
+  function buildSp(title,list,fmt,key){var d=card(title,key);barsInto(d,rankSp(list,Math.min(5,list.length)),fmt);return d;}
+  function buildInvasive(){var d=card('Invasive species','invasive');var iv=phInvasive();var v=document.createElement('div');v.className='verdict '+(iv.yes?'yes':'no');v.innerHTML='<div class="yn">'+(iv.yes?'YES':'NO')+'</div><div><div class="q">Invasive species present?</div><div class="d">'+(iv.yes?'Possible match: <em>Xenia / Unomia</em> (pulsing soft coral)':'No invasive soft coral detected in this image.')+'</div><div class="c">Illustrative confidence '+Math.round(iv.conf*100)+'%</div></div>';d.appendChild(v);var s=document.createElement('div');s.className='src';s.textContent=srcText();d.appendChild(s);return d;}
+  function buildOne(k,box){
+    if(k==='health')box.appendChild(buildHealth());
+    else if(k==='species')box.appendChild(buildSp('Coral species',CORAL,spFmt,'coralsp'));
+    else if(k==='fish')box.appendChild(buildSp('Fish species',FISH,spFmt,'fish'));
+    else if(k==='sponge')box.appendChild(buildSp('Sponge species',SPONGE,spFmt,'sponge'));
+    else if(k==='seafan')box.appendChild(buildSp('Sea fans &amp; octocorals',SEAFAN,spFmt,'seafan'));
+    else if(k==='algae')box.appendChild(buildSp('Algae / macroalgae',ALGAE,algFmt,'algae'));
+    else if(k==='invasive')box.appendChild(buildInvasive());
+  }
+  function renderAll(box){
+    var w=document.createElement('div'); w.className='tripnote'; w.innerHTML='<b>All models run.</b> This used several times the compute of a single screen. Please use the &ldquo;I do not know&rdquo; option sparingly.'; box.appendChild(w);
+    var types=[{k:'coral',label:'Coral'},{k:'fish',label:'Fish'},{k:'sponge',label:'Sponge'},{k:'seafan',label:'Sea fan / octocoral'},{k:'algae',label:'Macroalgae'}];
+    var wi=Math.floor(Math.random()*types.length), win=types[wi], conf=Math.round(73+Math.random()*23);
+    var hl=document.createElement('div'); hl.className='headline';
+    hl.innerHTML='<div class="kicker">Highest confidence across all models</div><h3>We think this is a <span class="acc">'+win.label+'</span>.</h3><div class="hsub">This is our best guess based on the highest confidence score (<b>'+conf+'%</b>). We ran every model, and this one led by a clear margin, so only its read-out is shown below.</div>';
+    box.appendChild(hl);
+    if(win.k==='coral'){ box.appendChild(buildHealth()); box.appendChild(buildSp('Coral species',CORAL,spFmt,'coralsp')); }
+    else if(win.k==='fish'){ box.appendChild(buildSp('Fish species',FISH,spFmt,'fish')); }
+    else if(win.k==='sponge'){ box.appendChild(buildSp('Sponge species',SPONGE,spFmt,'sponge')); }
+    else if(win.k==='seafan'){ box.appendChild(buildSp('Sea fans &amp; octocorals',SEAFAN,spFmt,'seafan')); }
+    else { box.appendChild(buildSp('Algae / macroalgae',ALGAE,algFmt,'algae')); }
+    var others=[]; types.forEach(function(t,i){ if(i!==wi) others.push(t.label+' '+(Math.round(2+Math.random()*9))+'%'); });
+    var lc=document.createElement('div'); lc.className='lowconf'; lc.innerHTML='Other models returned low confidence: '+others.join(' &middot; ')+'.'; box.appendChild(lc);
+  }
+  function renderResults(){
+    var box=$('results'); box.innerHTML='';
+    var labels={coral:'A sick coral',invasive:'Invasive species',algae:'Algae screen',sponge:'Sponge species',seafan:'Sea fans & octocorals',fish:'Fish species',all:'All models'};
+    $('runline').innerHTML='Ran: <b>'+labels[choice]+'</b> &middot; '+(selection?'boxed target':'whole image');
+    if(choice==='all'){ renderAll(box); box.scrollTop=0; return; }
+    MODELS[choice].forEach(function(m){ buildOne(m,box); });
+    box.scrollTop=0;
+  }
+
+  /* ---- restart ---- */
+  $('restart').addEventListener('click',function(){
+    choice=null; hasImage=false; selection=null;
+    document.querySelectorAll('.opt').forEach(function(o){o.classList.remove('sel');});
+    fileInput.value=''; previewImg.src=''; frame.style.display='none'; drop.style.display='flex'; reupload.style.display='none'; clearSelection();
+    ['loc','sfirst','slast','semail','snote'].forEach(function(id){$(id).value='';}); if($('tos'))$('tos').checked=false;
+    updateN2(); checkForm();
+    goStep('welcome');
+  });
+
+  // typed welcome + live submission counter
+  var WLEDE="Please select an option:";
+  var typeT=null;
+  function typeWelcome(){ var el=$('wlede'); if(!el)return; var w=document.querySelector('.welcome'); if(typeT)clearTimeout(typeT); el.classList.add('typing'); if(w)w.classList.add('typing-mode'); var i=0; (function step(){ el.textContent=WLEDE.slice(0,i); if(i<WLEDE.length){ i++; typeT=setTimeout(step,7); } else { el.classList.remove('typing'); if(w)w.classList.remove('typing-mode'); } })(); }
+  (function(){ var sub=4287, sc=$('subcount'); if(sc){ sc.textContent=sub.toLocaleString(); setInterval(function(){ sub+=1; sc.textContent=sub.toLocaleString(); }, 6000); } })();
+
+  // init
+  updateN2(); checkForm(); typeWelcome();
+})();
+</script>
+<script>(function(){var root=document.documentElement,key="reefspotter-theme",b=document.getElementById("themeToggle");if(!b)return;b.addEventListener("click",function(){var dark=root.getAttribute("data-theme")==="dark";if(dark){root.removeAttribute("data-theme");}else{root.setAttribute("data-theme","dark");}try{localStorage.setItem(key,dark?"light":"dark");}catch(e){}});})();</script>
+<script>(function(){var el=document.getElementById("rotator");if(!el)return;if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion:reduce)").matches){el.textContent="Scientist";return;}var words=["Friend","Islander","Visitor","Manager","Scientist"],i=0,hits=0,t;el.textContent=words[0];t=setInterval(function(){el.style.opacity="0";setTimeout(function(){i=(i+1)%words.length;el.textContent=words[i];el.style.opacity="1";if(i===4){hits++;if(hits>=2){clearInterval(t);}}},1200);},2380);})();</script>
+</body>
+</html>

@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Terms of Service · ReefSpotter</title>
+<meta name="description" content="Draft terms of service for ReefSpotter, an AI-assisted coral reef screening tool from the VICAR Lab, U.S. Virgin Islands." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+
+  :root{
+    --ink:#06273A; --ink-2:#3C566B; --mut:#7A899E;
+    --canvas:#F2F6F8; --panel:#FFFFFF; --panel-2:#EFF4F6;
+    --line:#E9EEF2; --line-2:rgba(6,39,58,.055);
+    --navy:#06273A; --navy-2:#0C3A53;
+    --magenta:#E60A80; --magenta-deep:#B8005F; --magenta-soft:#FF4FA6;
+    --magenta-wash:rgba(230,10,128,.06);
+    --steel:#8B97AD; --slate:#8B97AD; --mist:#E8EEF1; --blue:#2E3FD6; --mint:#93E68A;
+    --green:#10B981; --amber:#F59E0B;
+    --rule:#E9EEF2; --rule-d:rgba(255,255,255,.12);
+    --bone:#F2F6F8; --bone-2:#E6EDF1; --abyss:#06273A;
+    --radius:18px; --radius-sm:12px; --radius-xs:10px;
+    --shadow:0 1px 2px rgba(6,39,58,.03), 0 18px 42px -24px rgba(6,39,58,.18);
+    --shadow-sm:0 1px 1px rgba(6,39,58,.04);
+    --display:"Space Grotesk","Plus Jakarta Sans",system-ui,sans-serif;
+    --ui:"Plus Jakarta Sans",system-ui,-apple-system,sans-serif;
+    --accent:"Plus Jakarta Sans",system-ui,sans-serif;
+    --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    --page:linear-gradient(165deg,#EAF2FB 0%,#DCE8F6 50%,#CEDFF2 100%);
+    --card:linear-gradient(180deg, rgba(255,255,255,.84), rgba(234,243,252,.78));
+    --card-hover:linear-gradient(180deg, rgba(255,255,255,.95), rgba(226,238,251,.88));
+    --ico:linear-gradient(155deg,#E1ECFA,#F5FAFF);
+    --feature:linear-gradient(150deg,#0C3A53 0%,#06273A 52%,#0A1F46 100%);
+    --header:rgba(233,241,251,.62);
+  }
+  :root[data-theme="dark"]{
+    --ink:#EAF2FB; --ink-2:#AEC1D3; --mut:#7E94A8;
+    --line:rgba(255,255,255,.12); --line-2:rgba(255,255,255,.06);
+    --panel-2:rgba(255,255,255,.06); --rule:rgba(255,255,255,.12); --rule-d:rgba(255,255,255,.14);
+    --magenta-wash:rgba(255,79,166,.10);
+    --page:linear-gradient(165deg,#061829 0%,#0A2238 46%,#0A1A3C 100%);
+    --card:linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.032));
+    --card-hover:linear-gradient(180deg, rgba(255,255,255,.13), rgba(255,255,255,.055));
+    --ico:linear-gradient(155deg, rgba(46,63,214,.36), rgba(255,255,255,.05));
+    --feature:linear-gradient(150deg, rgba(46,63,214,.26), rgba(8,28,50,.6));
+    --header:rgba(7,20,36,.5);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{height:100%}
+  body{min-height:100%;background:var(--page);background-attachment:fixed;color:var(--ink);font-family:var(--ui);line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;display:flex;flex-direction:column}
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(1100px 540px at 50% -14%, rgba(46,63,214,.16), transparent 60%), radial-gradient(760px 520px at 98% 2%, rgba(230,10,128,.10), transparent 56%), radial-gradient(900px 620px at -8% 112%, rgba(46,63,214,.12), transparent 60%)}
+  .demobar,header.site,main,footer.site{position:relative;z-index:1}
+  img{max-width:100%;display:block}
+  a{color:var(--magenta)}
+  .acc{font-family:var(--display);font-style:normal;color:var(--magenta)}
+  .kicker{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.13em;color:var(--magenta);font-weight:500}
+  .wrap{width:100%;max-width:1340px;margin:0 auto;padding:0 clamp(14px,3vw,40px)}
+
+  /* animated bubbles, same as main site */
+  .bubbles{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
+  .bubble{position:absolute;bottom:-18vh;border-radius:50%;opacity:0;will-change:transform,opacity;animation:rise var(--d,44s) ease-in infinite;animation-delay:var(--delay,0s)}
+  @keyframes rise{0%{transform:translateY(0) scale(.55);opacity:0}14%{opacity:.5}55%{opacity:.3}100%{transform:translateY(-126vh) scale(1.1);opacity:0}}
+  @media (prefers-reduced-motion:reduce){.bubbles{display:none}}
+
+  /* demo bar */
+  .demobar{flex:none;background:var(--feature);color:#fff}
+  .demobar .wrap{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;padding:6px 14px}
+  .demobar .dot{width:6px;height:6px;background:var(--magenta-soft);border-radius:50%;box-shadow:0 0 0 3px rgba(226,0,116,.25);animation:pulse 2.4s infinite;flex:none}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .demobar b{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+  .demobar span{font-family:var(--mono);font-size:10px;letter-spacing:.02em;color:rgba(255,255,255,.55)}
+
+  /* header */
+  header.site{flex:none;background:var(--header);backdrop-filter:saturate(140%) blur(10px);-webkit-backdrop-filter:saturate(140%) blur(10px);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20}
+  header.site .wrap{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:12px clamp(14px,3vw,40px)}
+  .brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit;margin-right:auto}
+  .logomark{flex:none;width:clamp(38px,5vw,44px);height:clamp(38px,5vw,44px);display:block}
+  .logomark svg{width:100%;height:100%;display:block}
+  .brandtext{display:flex;flex-direction:column;line-height:1;gap:3px}
+  .bname{font-family:var(--display);font-weight:600;font-size:clamp(17px,2.3vw,21px);letter-spacing:-.02em;color:var(--ink);white-space:nowrap}
+  .bname span{color:var(--magenta)}
+  .btag{font-family:var(--mono);font-size:9px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut)}
+  @media(max-width:600px){.btag{display:none}.bname{font-size:16px}}
+  .themetoggle{flex:none;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--card);color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.18s;backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
+  .themetoggle:hover{border-color:var(--magenta);color:var(--magenta);transform:translateY(-1px)}
+  .themetoggle svg{width:18px;height:18px}
+  .themetoggle .sun{display:none}
+  :root[data-theme="dark"] .themetoggle .sun{display:block}
+  :root[data-theme="dark"] .themetoggle .moon{display:none}
+  :root[data-theme="dark"] .logomark [fill="#06273A"]{fill:#EAF2FB}
+  :root[data-theme="dark"] .logomark [stroke="#06273A"]{stroke:#EAF2FB}
+  :root[data-theme="dark"] .logomark svg{filter:drop-shadow(0 1px 3px rgba(0,0,0,.35))}
+
+  /* document body */
+  main{flex:1}
+  .doc{max-width:820px;margin:clamp(22px,4vh,44px) auto clamp(40px,6vh,72px);padding:0 clamp(14px,3vw,40px)}
+  .sheet{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);backdrop-filter:blur(9px) saturate(135%);-webkit-backdrop-filter:blur(9px) saturate(135%);padding:clamp(26px,4vw,52px)}
+  .doc .kicker{margin-bottom:11px}
+  h1{font-family:var(--display);font-weight:600;letter-spacing:-.03em;line-height:1.04;font-size:clamp(30px,5vw,48px);color:var(--ink);margin-bottom:8px}
+  .updated{font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--mut);margin-bottom:26px}
+  .lead{font-size:clamp(16px,2.1vw,18px);color:var(--ink-2);margin-bottom:8px;max-width:64ch}
+  h2{font-family:var(--display);font-weight:600;font-size:clamp(18px,2.6vw,23px);letter-spacing:-.02em;color:var(--ink);margin:30px 0 9px}
+  p{font-size:15px;color:var(--ink-2);margin-bottom:12px;max-width:70ch}
+  ul{margin:0 0 12px;padding:0;list-style:none;max-width:70ch}
+  li{font-size:15px;color:var(--ink-2);padding-left:18px;position:relative;margin-bottom:7px}
+  li::before{content:"\203A";position:absolute;left:2px;color:var(--magenta)}
+  .note{border-left:4px solid var(--amber);background:rgba(245,158,11,.1);border-radius:0 var(--radius-xs) var(--radius-xs) 0;padding:13px 16px;font-size:13.5px;color:var(--ink);margin:8px 0 4px;max-width:70ch}
+  .back{display:inline-block;margin-top:32px;font-family:var(--ui);font-size:13px;font-weight:600;letter-spacing:.01em;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:11px 22px;text-decoration:none;box-shadow:var(--shadow-sm);transition:.16s}
+  .back:hover{border-color:var(--magenta);color:var(--magenta);transform:translateY(-1px)}
+
+  /* footer */
+  footer.site{flex:none;background:var(--feature);color:#fff}
+  footer.site .wrap{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;padding:11px clamp(14px,3vw,40px)}
+  footer.site .disc{display:flex;align-items:center;gap:11px;font-family:var(--mono);font-size:10px;letter-spacing:.01em;color:rgba(255,255,255,.62);max-width:96ch;line-height:1.55}
+  footer.site .disc img{height:22px;width:auto;opacity:.9;flex:none;filter:brightness(0) invert(1)}
+  footer.site .cred{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.45);text-align:right}
+  footer.site .cred b{color:rgba(255,255,255,.72)}
+</style>
+<script>(function(){try{var t=localStorage.getItem("reefspotter-theme");if(t!=="light")document.documentElement.setAttribute("data-theme","dark");}catch(e){}})();</script>
+</head>
+<body>
+
+<div class="bubbles" aria-hidden="true">
+  <span class="bubble" style="left:5%;width:130px;height:130px;background:rgba(230,10,128,.13);filter:blur(6px);--d:53s;--delay:-9.7s"></span>
+  <span class="bubble" style="left:14%;width:60px;height:60px;background:transparent;border:2px solid rgba(46,63,214,.20);filter:blur(5px);--d:38s;--delay:-21.1s"></span>
+  <span class="bubble" style="left:22%;width:90px;height:90px;background:rgba(139,151,173,.17);filter:blur(6px);--d:46s;--delay:-23.7s"></span>
+  <span class="bubble" style="left:33%;width:42px;height:42px;background:rgba(147,230,138,.20);filter:blur(5px);--d:34s;--delay:-32.8s"></span>
+  <span class="bubble" style="left:42%;width:160px;height:160px;background:rgba(230,10,128,.13);filter:blur(7px);--d:63s;--delay:-36.8s"></span>
+  <span class="bubble" style="left:52%;width:70px;height:70px;background:transparent;border:2px solid rgba(46,63,214,.20);filter:blur(5px);--d:42s;--delay:-38.6s"></span>
+  <span class="bubble" style="left:61%;width:50px;height:50px;background:rgba(139,151,173,.17);filter:blur(5px);--d:36s;--delay:-29.1s"></span>
+  <span class="bubble" style="left:70%;width:112px;height:112px;background:rgba(147,230,138,.20);filter:blur(6px);--d:51s;--delay:-27.3s"></span>
+  <span class="bubble" style="left:78%;width:80px;height:80px;background:rgba(230,10,128,.13);filter:blur(6px);--d:44s;--delay:-21.1s"></span>
+  <span class="bubble" style="left:88%;width:140px;height:140px;background:rgba(139,151,173,.17);filter:blur(7px);--d:59s;--delay:-7.6s"></span>
+  <span class="bubble" style="left:95%;width:55px;height:55px;background:transparent;border:2px solid rgba(46,63,214,.20);filter:blur(5px);--d:40s;--delay:-13.2s"></span>
+  <span class="bubble" style="left:30%;width:100px;height:100px;background:transparent;border:1.5px solid rgba(255,255,255,.10);filter:blur(6px);--d:49s;--delay:-0.9s"></span>
+  <span class="bubble" style="left:64%;width:36px;height:36px;background:rgba(230,10,128,.13);filter:blur(5px);--d:32s;--delay:-10.5s"></span>
+  <span class="bubble" style="left:48%;width:46px;height:46px;background:rgba(147,230,138,.20);filter:blur(5px);--d:38s;--delay:-11.2s"></span>
+  <span class="bubble" style="left:10%;width:96px;height:96px;background:transparent;border:2px solid rgba(46,63,214,.20);filter:blur(6px);--d:55s;--delay:-20.7s"></span>
+  <span class="bubble" style="left:84%;width:66px;height:66px;background:rgba(139,151,173,.17);filter:blur(5px);--d:42s;--delay:-39.9s"></span>
+</div>
+
+<div class="demobar" role="alert">
+  <div class="wrap"><span class="dot" aria-hidden="true"></span><b>Demonstration only</b><span>Draft terms for a proof-of-concept proposal &middot; not legal advice</span></div>
+</div>
+
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="index.html" aria-label="ReefSpotter by VICAR"><span class="logomark" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+<circle cx="28" cy="27" r="11" fill="#E60A80" fill-opacity="0.10"/>
+<line x1="40" y1="39" x2="53.5" y2="52.5" stroke="#06273A" stroke-width="8.4" stroke-linecap="round"/>
+<line x1="40" y1="39" x2="53.5" y2="52.5" stroke="#2E3FD6" stroke-width="8.4" stroke-linecap="round" stroke-opacity="0.18"/>
+<path d="M28 10.4 L29.49 10.47 L30.82 6.19 L34.49 7.03 L33.83 11.46 L35.2 12.04 L36.51 12.75 L39.57 9.47 L42.51 11.82 L40 15.53 L40.98 16.65 L41.85 17.86 L46.03 16.23 L47.66 19.62 L43.79 21.87 L44.18 23.31 L44.45 24.77 L48.92 25.12 L48.92 28.88 L44.45 29.23 L44.18 30.69 L43.79 32.13 L47.66 34.38 L46.03 37.77 L41.85 36.14 L40.98 37.35 L40 38.47 L42.51 42.18 L39.57 44.53 L36.51 41.25 L35.2 41.96 L33.83 42.54 L34.49 46.97 L30.82 47.81 L29.49 43.53 L28 43.6 L26.51 43.53 L25.18 47.81 L21.51 46.97 L22.17 42.54 L20.8 41.96 L19.49 41.25 L16.43 44.53 L13.49 42.18 L16 38.47 L15.02 37.35 L14.15 36.14 L9.97 37.77 L8.34 34.38 L12.21 32.13 L11.82 30.69 L11.55 29.23 L7.08 28.88 L7.08 25.12 L11.55 24.77 L11.82 23.31 L12.21 21.87 L8.34 19.62 L9.97 16.23 L14.15 17.86 L15.02 16.65 L16 15.53 L13.49 11.82 L16.43 9.47 L19.49 12.75 L20.8 12.04 L22.17 11.46 L21.51 7.03 L25.18 6.19 L26.51 10.47 Z M 16.6 27 a 11.4 11.4 0 1 0 22.8 0 a 11.4 11.4 0 1 0 -22.8 0 Z" fill="#06273A" fill-rule="evenodd" stroke="#2E3FD6" stroke-opacity="0.32" stroke-width="0.8"/>
+<circle cx="28" cy="27" r="11.4" fill="none" stroke="#06273A" stroke-width="0.6"/>
+<path d="M 28 18.8 Q 30.5 24.5 36.2 27 Q 30.5 29.5 28 35.2 Q 25.5 29.5 19.8 27 Q 25.5 24.5 28 18.8 Z" fill="#E60A80"/>
+<circle cx="23" cy="21.5" r="1.7" fill="#ffffff" fill-opacity="0.6"/>
+</svg></span><span class="brandtext"><span class="bname">Reef<span>Spotter</span></span><span class="btag">by VICAR</span></span></a>
+    <button class="themetoggle" id="themeToggle" aria-label="Toggle dark and light mode" type="button"><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg></button>
+  </div>
+</header>
+
+<main>
+  <div class="doc">
+    <div class="sheet">
+      <div class="kicker">VICAR Reef Screen</div>
+      <h1>Terms of <span class="acc">Service</span></h1>
+      <div class="updated">Draft &middot; 17 June 2026</div>
+
+      <p class="lead">Thank you for contributing to coral reef science in the U.S. Virgin Islands. These plain-language terms explain how your photos and information are used when you submit an observation. This is a draft for a proof-of-concept demonstration and is not legal advice.</p>
+
+      <h2>1. Your submission</h2>
+      <p>By submitting a photo, you confirm that you took it yourself or have permission to share it, and that it does not contain people who have not agreed to be photographed.</p>
+
+      <h2>2. How your images are used</h2>
+      <p>Scientists at the University of the Virgin Islands (the VICAR Lab and collaborators) may use submitted images to:</p>
+      <ul>
+        <li>Analyze reef condition and verify identifications (quality control by human experts)</li>
+        <li>Train, evaluate, and improve our AI models</li>
+        <li>Display selected images publicly, for example in galleries, talks, reports, and on this site, with attribution</li>
+      </ul>
+
+      <h2>3. License</h2>
+      <p>You keep the copyright to your photos. By submitting, you grant the University of the Virgin Islands a non-exclusive, worldwide license to use them for the purposes above, and you agree that submitted images may be shared under a <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">Creative Commons Attribution-NonCommercial 4.0 (CC BY-NC 4.0)</a> license. This means others may use them for non-commercial purposes with credit to you.</p>
+
+      <h2>4. Your name and email</h2>
+      <p>Identifications may be shown publicly with your first name and last initial. Your email address is removed within 30 days of a human research expert reviewing the identifications. We only ask for your email so we can reach out if you submit something truly novel. You might find a new species!</p>
+
+      <h2>5. No guarantee</h2>
+      <p>Results come from AI models and can be wrong. They are a screening aid, not a diagnosis, and should not be used for management, regulatory, or conservation decisions without review by qualified experts.</p>
+
+      <h2>6. Privacy</h2>
+      <p>In this proof-of-concept demonstration, images are processed in your browser and nothing is transmitted or stored. In a deployed version, submissions would be handled according to UVI data practices.</p>
+
+      <h2>7. Contact</h2>
+      <p>Questions about these terms or your contributions: <a href="mailto:lauren.olinger@uvi.edu">lauren.olinger@uvi.edu</a>.</p>
+
+      <div class="note">This is a draft for a proof-of-concept demonstration and is not legal advice.</div>
+
+      <a class="back" href="index.html">&larr; Back to the tool</a>
+    </div>
+  </div>
+</main>
+
+<footer class="site"><div class="wrap">
+  <div class="disc"><img src="vicar-logo-long.png" alt="VICAR" />Results are from an AI model and can make mistakes. Submitted images are used by UVI scientists for analysis and quality control.</div>
+  <div class="cred">Oceankind Phase III.1 &middot; Discovery and Diagnosis &middot; <b>Proof of Concept for Proposal, 17 June 2026</b> &middot; L. Olinger</div>
+</div></footer>
+
+<script>
+(function(){
+  var btn=document.getElementById("themeToggle");
+  if(!btn)return;
+  btn.addEventListener("click",function(){
+    var root=document.documentElement;
+    var dark=root.getAttribute("data-theme")==="dark";
+    if(dark){root.removeAttribute("data-theme");try{localStorage.setItem("reefspotter-theme","light");}catch(e){}}
+    else{root.setAttribute("data-theme","dark");try{localStorage.setItem("reefspotter-theme","dark");}catch(e){}}
+  });
+})();
+</script>
+</body>
+</html>
