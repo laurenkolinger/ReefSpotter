@@ -307,8 +307,11 @@
   /* ---- phones: natural scrolling flow, decluttered header, bigger touch targets ---- */
   @media (max-width:640px){
     html,body{height:auto}
-    body{display:block;overflow-x:hidden}
-    main{display:block}
+    /* flex column at full viewport height so the footer sticks to the bottom,
+       while main grows to fill short pages (welcome) and the page still scrolls when tall */
+    body{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;overflow-x:hidden}
+    main{display:block;flex:1 0 auto}
+    footer.site{flex:none}
     main .wrap{display:block;padding-top:16px;padding-bottom:26px}
     .step{flex:none}
     .step.active{display:block}
