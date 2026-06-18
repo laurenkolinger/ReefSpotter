@@ -304,6 +304,72 @@
     #map,.maperr,.mapcol{min-height:240px}
   }
 
+  /* ---- phones: natural scrolling flow, decluttered header, bigger touch targets ---- */
+  @media (max-width:640px){
+    html,body{height:auto}
+    body{display:block;overflow-x:hidden}
+    main{display:block}
+    main .wrap{display:block;padding-top:16px;padding-bottom:26px}
+    .step{flex:none}
+    .step.active{display:block}
+    .body{display:block;margin-top:16px}
+    .welcome{display:block;min-height:0}
+
+    /* header: drop the step tracker, shrink the brand */
+    header.site .wrap{padding:9px 14px;gap:10px}
+    .logomark{width:34px;height:34px}
+    .bname{font-size:16px}
+    .prog{display:none}
+    .demobar .wrap{padding:6px 12px}
+
+    /* type scale */
+    .welcome h1{font-size:clamp(28px,8.5vw,40px);margin-top:8px}
+    .wlede{font-size:16px;margin-top:14px;min-height:0;max-width:none}
+    .step h1{font-size:clamp(23px,7vw,30px)}
+    .step h1.learnh1{font-size:clamp(20px,6vw,26px)}
+    .step .sub{font-size:14px;margin-top:8px}
+    .step .h .kicker{margin-bottom:7px}
+
+    /* welcome actions: full-width, stacked */
+    .wbtns{flex-direction:column;gap:11px;margin-top:22px}
+    .bigbtn{min-width:0;width:100%;padding:17px 18px}
+    .bigbtn b{font-size:16.5px}
+    .counter{margin-top:18px}
+
+    /* step 1 cards */
+    .opts{gap:11px}
+    .opt{padding:17px}
+    .opt h3{font-size:18px}
+    .opt p{font-size:13px}
+    .opt .ico{width:40px;height:40px;margin-bottom:4px}
+    .opt .ico svg{width:23px;height:23px}
+
+    /* step 2 photo: a large, easy drawing surface */
+    .two{display:block}
+    .imgcol{margin-bottom:14px}
+    .frame{flex:none;height:min(56vh,430px);min-height:300px}
+    .drop{min-height:280px}
+    .helpcard{padding:16px}
+    .bboxhint{font-size:13px;padding:13px 16px}
+
+    /* step 3 details */
+    .det{display:block}
+    .mapcol{margin-bottom:14px}
+    #map,.maperr,.mapcol{min-height:260px}
+
+    /* nav: the two buttons share a row, hint text drops below */
+    .nav{flex-wrap:wrap;gap:10px;margin-top:16px}
+    .nav .spacer{display:none}
+    .nav .hinttext{order:3;flex:1 1 100%;text-align:center;margin:0}
+    .nav .btn{flex:1 1 0;min-height:46px;display:inline-flex;align-items:center;justify-content:center}
+
+    /* results */
+    .results{gap:11px}
+    .models{grid-template-columns:1fr}
+    .headline{padding:16px 17px}
+    .rcard{padding:16px 17px}
+  }
+
 
   :root[data-theme="dark"]{
     --ink:#EAF2FB; --ink-2:#AEC1D3; --mut:#7E94A8;
@@ -520,7 +586,7 @@
       <p class="sub">Please tell us what you think you saw. We will run the matching model.</p></div>
     <div class="body">
       <div class="opts">
-        <button class="opt" data-pick="coral"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-9" /><path d="M12 16.5c-2.6-1.4-4-3-4-6" /><path d="M12 14.2c2.6-1.4 4-3 4-6" /><circle cx="12" cy="11" r="1.4" fill="currentColor" stroke="none"/><circle cx="8" cy="9.4" r="1.3" fill="currentColor" stroke="none"/><circle cx="16" cy="9.4" r="1.3" fill="currentColor" stroke="none"/></svg></span><span class="n">Coral</span><h3>A sick coral</h3><p>Check a coral for bleaching or disease, and identify it.</p></button>
+        <button class="opt" data-pick="coral"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21v-9" /><path d="M12 16.5c-2.6-1.4-4-3-4-6" /><path d="M12 14.2c2.6-1.4 4-3 4-6" /><circle cx="12" cy="11" r="1.4" fill="currentColor" stroke="none"/><circle cx="8" cy="9.4" r="1.3" fill="currentColor" stroke="none"/><circle cx="16" cy="9.4" r="1.3" fill="currentColor" stroke="none"/></svg></span><span class="n">Coral</span><h3>A coral that may be bleached or diseased</h3><p>Check a coral for bleaching or disease, and identify it.</p></button>
         <button class="opt" data-pick="invasive"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l8.5 15h-17z" /><path d="M12 10v4.2" /><path d="M12 17.4h.01" /></svg></span><span class="n">Invasive</span><h3>An invasive species</h3><p>A quick yes or no check for invasives such as pulsing soft corals.</p></button>
         <button class="opt" id="elseBtn"><span class="ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="6.2" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="17.8" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg></span><span class="n">More</span><h3>Something else&hellip;</h3><p>Algae, sponge, sea fan, fish, or not sure. Tap to choose.</p></button>
       </div>
@@ -678,13 +744,18 @@
 
   function positionLayer(){ if(!previewImg.naturalWidth||frame.style.display==='none')return; var fr=frame.getBoundingClientRect(); var sc=Math.min(fr.width/previewImg.naturalWidth,fr.height/previewImg.naturalHeight); var w=previewImg.naturalWidth*sc,h=previewImg.naturalHeight*sc; layer.style.width=w+'px';layer.style.height=h+'px';layer.style.left=((fr.width-w)/2)+'px';layer.style.top=((fr.height-h)/2)+'px'; if(selection)drawFromNorm(); }
   window.addEventListener('resize',positionLayer);
-  var drawing=false,sx=0,sy=0;
-  function pt(e){var r=layer.getBoundingClientRect();var t=e.touches?e.touches[0]:e;return{x:Math.max(0,Math.min(r.width,t.clientX-r.left)),y:Math.max(0,Math.min(r.height,t.clientY-r.top)),w:r.width,h:r.height};}
-  function start(e){if(!hasImage)return;e.preventDefault();bboxhint.classList.remove('show');var p=pt(e);drawing=true;sx=p.x;sy=p.y;rect.style.display='block';rect.style.left=sx+'px';rect.style.top=sy+'px';rect.style.width='0';rect.style.height='0';}
+  var drawing=false,sx=0,sy=0,pid=null;
+  /* Pointer Events unify mouse/touch/pen. On touchend the old code read e.touches[0]
+     (empty list) and threw, so the box never saved on phones. clientX/Y is always
+     present on a pointer event, and setPointerCapture keeps the drag alive off-image. */
+  function pt(e){var r=layer.getBoundingClientRect();return{x:Math.max(0,Math.min(r.width,e.clientX-r.left)),y:Math.max(0,Math.min(r.height,e.clientY-r.top)),w:r.width,h:r.height};}
+  function start(e){if(!hasImage||(e.button&&e.button!==0))return;e.preventDefault();pid=e.pointerId;try{layer.setPointerCapture(pid);}catch(_){}bboxhint.classList.remove('show');var p=pt(e);drawing=true;sx=p.x;sy=p.y;rect.style.display='block';rect.style.left=sx+'px';rect.style.top=sy+'px';rect.style.width='0';rect.style.height='0';}
   function move(e){if(!drawing)return;e.preventDefault();var p=pt(e);rect.style.left=Math.min(sx,p.x)+'px';rect.style.top=Math.min(sy,p.y)+'px';rect.style.width=Math.abs(p.x-sx)+'px';rect.style.height=Math.abs(p.y-sy)+'px';}
-  function end(e){if(!drawing)return;drawing=false;var p=pt(e);var w=Math.abs(p.x-sx),h=Math.abs(p.y-sy);if(w<14||h<14){clearSelection();return;}selection={x:Math.min(sx,p.x)/p.w,y:Math.min(sy,p.y)/p.h,w:w/p.w,h:h/p.h};boxinstr.classList.add('done');bititle.innerHTML='&#10003; Subject boxed';bisub.textContent='The model will read only this region. Drag again to redraw.';selclear.style.display='inline-block';updateN2();}
-  layer.addEventListener('mousedown',start);window.addEventListener('mousemove',move);window.addEventListener('mouseup',end);
-  layer.addEventListener('touchstart',start,{passive:false});layer.addEventListener('touchmove',move,{passive:false});layer.addEventListener('touchend',end);
+  function end(e){if(!drawing)return;drawing=false;try{if(pid!=null)layer.releasePointerCapture(pid);}catch(_){}pid=null;var p=pt(e);var w=Math.abs(p.x-sx),h=Math.abs(p.y-sy);if(w<12||h<12){clearSelection();return;}selection={x:Math.min(sx,p.x)/p.w,y:Math.min(sy,p.y)/p.h,w:w/p.w,h:h/p.h};boxinstr.classList.add('done');bititle.innerHTML='&#10003; Subject boxed';bisub.textContent='The model will read only this region. Drag again to redraw.';selclear.style.display='inline-block';updateN2();}
+  layer.addEventListener('pointerdown',start);
+  layer.addEventListener('pointermove',move);
+  layer.addEventListener('pointerup',end);
+  layer.addEventListener('pointercancel',function(){if(drawing){drawing=false;pid=null;clearSelection();}});
   function drawFromNorm(){var r=layer.getBoundingClientRect();rect.style.display='block';rect.style.left=(selection.x*r.width)+'px';rect.style.top=(selection.y*r.height)+'px';rect.style.width=(selection.w*r.width)+'px';rect.style.height=(selection.h*r.height)+'px';}
   function clearSelection(){selection=null;rect.style.display='none';boxinstr.classList.remove('done');bititle.textContent='Draw a box around your subject (required)';bisub.textContent='Even with just one subject in the frame, outline it. This tells our AI model exactly what to read and makes it work better. Click and drag on the photo.';selclear.style.display='none';if(hasImage&&frame.style.display!=='none')bboxhint.classList.add('show');updateN2();}
   selclear.addEventListener('click',clearSelection);
@@ -812,7 +883,7 @@
   }
   function renderResults(){
     var box=$('results'); box.innerHTML='';
-    var labels={coral:'A sick coral',invasive:'Invasive species',algae:'Algae screen',sponge:'Sponge species',seafan:'Sea fans & octocorals',fish:'Fish species',all:'All models'};
+    var labels={coral:'A coral that may be bleached or diseased',invasive:'Invasive species',algae:'Algae screen',sponge:'Sponge species',seafan:'Sea fans & octocorals',fish:'Fish species',all:'All models'};
     $('runline').innerHTML='Ran: <b>'+labels[choice]+'</b> &middot; '+(selection?'boxed target':'whole image');
     if(choice==='all'){ renderAll(box); box.scrollTop=0; return; }
     MODELS[choice].forEach(function(m){ buildOne(m,box); });
