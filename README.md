@@ -11,8 +11,6 @@ This is a pure static site — no build step, no backend. Open `index.html` in a
 | `index.html` | Main page |
 | `terms.html` | Terms page |
 | `gA.jpg`, `gB.jpg`, `vicar-logo-long.png` | Images used by the main page |
-| `uploads/` | An older/duplicate copy of the site (not referenced by `index.html`) |
-| `screenshots/` | Reference screenshots |
 
 ## Run locally
 
